@@ -1,15 +1,15 @@
 import React from "react";
 
-const renderFormattedText = (text, pIndex) => {
+const renderFormattedText = (text) => {
   // split by URLs first
   const parts = text.split(/(https?:\/\/[^\s<]+)/g);
 
-  return parts.map((part, j) => {
+  return parts.map((part) => {
     if (part.match(/^https?:\/\//)) {
       // Strip trailing > if it was wrapped in < >
       const url = part.endsWith(">") ? part.slice(0, -1) : part;
       return (
-        <a key={`url-${pIndex}-${j}`} href={url} target="_blank" rel="noopener noreferrer">
+        <a key={url} href={url} target="_blank" rel="noopener noreferrer">
           {url}
         </a>
       );
@@ -18,7 +18,8 @@ const renderFormattedText = (text, pIndex) => {
     // non-url text: parse **bold**
     const boldParts = part.split(/\*\*(.*?)\*\*/g);
     return boldParts.map((bp, k) => {
-      if (k % 2 === 1) return <strong key={`bold-${pIndex}-${j}-${k}`}>{bp}</strong>;
+      // We use string content + k as key since identical bold text can appear multiple times
+      if (k % 2 === 1) return <strong key={`bold-${bp}`}>{bp}</strong>;
       return bp;
     });
   });
@@ -32,7 +33,7 @@ const ChatMessage = ({ role, content, onOptionClick }) => {
     // Split by newlines
     const paragraphs = text.split("\n").filter((p) => p.trim() !== "");
 
-    return paragraphs.map((paragraph, i) => {
+    return paragraphs.map((paragraph) => {
       // If it's an assistant message and starts with a dash or asterisk, render as a clickable option button
       // Restrictions: don't make it a button if it contains ** (structured field), is a link, or is too long.
       const isBullet = paragraph.trim().startsWith("- ") || paragraph.trim().startsWith("* ");
@@ -44,7 +45,7 @@ const ChatMessage = ({ role, content, onOptionClick }) => {
         if (!optionText.includes("**") && !optionText.includes("http") && optionText.length < 60) {
           return (
             <button
-              key={`btn-${i}`}
+              key={optionText}
               type="button"
               className="chat-option-btn"
               onClick={() => onOptionClick?.(optionText)}
@@ -60,8 +61,8 @@ const ChatMessage = ({ role, content, onOptionClick }) => {
       if (isBullet) pText = pText.substring(2);
 
       return (
-        <p key={`p-${i}`} style={{ marginBottom: i < paragraphs.length - 1 ? "0.5rem" : 0 }}>
-          {renderFormattedText(pText, i)}
+        <p key={paragraph} style={{ marginBottom: "0.5rem" }}>
+          {renderFormattedText(pText)}
         </p>
       );
     });
