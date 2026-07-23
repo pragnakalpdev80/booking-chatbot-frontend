@@ -1,0 +1,5 @@
+echo "Running frontend security checks (npm audit)..."
+npm audit
+
+echo "Running semgrep for frontend..."
+../venv/bin/semgrep --config p/javascript --error .
