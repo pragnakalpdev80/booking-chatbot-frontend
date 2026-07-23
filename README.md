@@ -10,7 +10,7 @@ This is the frontend application for the AI-powered Calendar Booking Chatbot. It
 - **Linting**: Oxlint (High-performance linter)
 - **Formatting**: Prettier
 - **Git Hooks**: Husky & `lint-staged`
-- **Security Scanners**: Semgrep, npm audit, GitHub CodeQL
+- **Security Scanners**: Semgrep, npm audit, GitHub CodeQL, SonarCloud
 
 ---
 
@@ -89,6 +89,7 @@ When you commit or push code, Husky will automatically intercept Git to perform 
 ### Remote Automation (GitHub Actions)
 
 - **CodeQL**: On every push to the `main` branch or on any Pull Request, GitHub Actions will trigger CodeQL to perform deep semantic security scanning on the codebase.
+- **SonarCloud**: Automatically analyzes code quality, test coverage, and technical debt. Results are sent directly to your SonarCloud dashboard (requires the `SONAR_TOKEN` repository secret).
 
 ---
 
