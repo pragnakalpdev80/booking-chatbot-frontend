@@ -27,11 +27,11 @@ test("renders and interacts with AdminDashboard", async () => {
           work_days: [1],
           work_start: "09:00",
           work_end: "17:00",
+          provider_name: "Dr. Test",
         }),
     });
   };
 
-  // Need a token to bypass login redirect
   localStorage.setItem("admin_token", "test-token");
 
   await act(async () => {
@@ -46,10 +46,40 @@ test("renders and interacts with AdminDashboard", async () => {
 
   expect(screen.getByText(/Admin Dashboard/i)).toBeInTheDocument();
 
-  const eventsTab = screen.getByRole("button", { name: /Upcoming Events/i });
+  // Test updating settings
+  const providerInput = await screen.findByLabelText(/Provider Name/i);
+  fireEvent.change(providerInput, { target: { value: "Dr. New Name" } });
 
+  const startInput = await screen.findByLabelText(/Work Start Time/i);
+  fireEvent.change(startInput, { target: { value: "10:00" } });
+
+  const endInput = await screen.findByLabelText(/Work End Time/i);
+  fireEvent.change(endInput, { target: { value: "18:00" } });
+
+  const tzInput = await screen.findByLabelText(/Timezone/i);
+  fireEvent.change(tzInput, { target: { value: "America/New_York" } });
+
+  const saveBtn = screen.getByRole("button", { name: /Save Settings/i });
+  await act(async () => {
+    fireEvent.click(saveBtn);
+  });
+
+  // Switch to events tab
+  const eventsTab = screen.getByRole("button", { name: /Upcoming Events/i });
   await act(async () => {
     fireEvent.click(eventsTab);
+  });
+
+  // Test link calendar
+  const linkBtn = screen.getByRole("button", { name: /Link Google Calendar/i });
+  await act(async () => {
+    fireEvent.click(linkBtn);
+  });
+
+  // Test logout
+  const logoutBtn = screen.getByRole("button", { name: /Logout/i });
+  await act(async () => {
+    fireEvent.click(logoutBtn);
   });
 
   localStorage.removeItem("admin_token");
