@@ -60,9 +60,14 @@ const AdminDashboard = () => {
       if (!res.ok) throw new Error("Failed to fetch OAuth URL");
       const data = await res.json();
       // Prevent open redirect vulnerabilities (jssecurity:S6105)
-      if (data.auth_url && data.auth_url.startsWith("https://accounts.google.com/")) {
-        window.location.href = data.auth_url; // Redirect to Google
-      } else {
+      try {
+        const url = new URL(data.auth_url);
+        if (url.hostname === "accounts.google.com") {
+          window.location.href = url.href; // Redirect to Google
+        } else {
+          throw new Error("Invalid authentication URL received from server");
+        }
+      } catch {
         throw new Error("Invalid authentication URL received from server");
       }
     } catch (err) {
@@ -103,12 +108,14 @@ const AdminDashboard = () => {
         </div>
         <nav className="dashboard-nav">
           <button
+            type="button"
             className={`nav-btn ${activeTab === "settings" ? "active" : ""}`}
             onClick={() => setActiveTab("settings")}
           >
             Provider Settings
           </button>
           <button
+            type="button"
             className={`nav-btn ${activeTab === "events" ? "active" : ""}`}
             onClick={() => setActiveTab("events")}
           >
@@ -116,10 +123,10 @@ const AdminDashboard = () => {
           </button>
         </nav>
         <div className="dashboard-actions">
-          <button onClick={handleLinkCalendar} className="btn-secondary">
+          <button type="button" onClick={handleLinkCalendar} className="btn-secondary">
             🔗 Link Google Calendar
           </button>
-          <button onClick={handleLogout} className="btn-danger">
+          <button type="button" onClick={handleLogout} className="btn-danger">
             Logout
           </button>
         </div>
@@ -133,8 +140,9 @@ const AdminDashboard = () => {
           <form onSubmit={handleSaveSettings} className="settings-form">
             <h2>Working Hours Configuration</h2>
             <div className="form-group">
-              <label>Provider Name</label>
+              <label htmlFor="providerName">Provider Name</label>
               <input
+                id="providerName"
                 type="text"
                 value={settings.provider_name}
                 onChange={(e) => setSettings({ ...settings, provider_name: e.target.value })}
@@ -142,16 +150,18 @@ const AdminDashboard = () => {
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label>Work Start Time</label>
+                <label htmlFor="workStart">Work Start Time</label>
                 <input
+                  id="workStart"
                   type="time"
                   value={settings.work_start}
                   onChange={(e) => setSettings({ ...settings, work_start: e.target.value })}
                 />
               </div>
               <div className="form-group">
-                <label>Work End Time</label>
+                <label htmlFor="workEnd">Work End Time</label>
                 <input
+                  id="workEnd"
                   type="time"
                   value={settings.work_end}
                   onChange={(e) => setSettings({ ...settings, work_end: e.target.value })}
@@ -159,8 +169,9 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="form-group">
-              <label>Timezone</label>
+              <label htmlFor="timezone">Timezone</label>
               <input
+                id="timezone"
                 type="text"
                 value={settings.timezone}
                 onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
@@ -179,8 +190,8 @@ const AdminDashboard = () => {
               <p>No upcoming events found.</p>
             ) : (
               <div className="events-list">
-                {events.map((ev, idx) => (
-                  <div key={idx} className="event-card">
+                {events.map((ev) => (
+                  <div key={ev.id || ev.htmlLink} className="event-card">
                     <h3>{ev.summary}</h3>
                     <p>
                       <strong>Start:</strong> {new Date(ev.start.dateTime).toLocaleString()}
