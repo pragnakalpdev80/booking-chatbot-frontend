@@ -1,21 +1,21 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import AdminLogin from "../pages/AdminLogin";
+import ProviderLogin from "../pages/ProviderLogin";
 import { AuthProvider } from "../context/AuthContext";
 
-test("renders and submits AdminLogin", async () => {
+test("renders and submits ProviderLogin", async () => {
   render(
     <AuthProvider>
       <BrowserRouter>
-        <AdminLogin />
+        <ProviderLogin />
       </BrowserRouter>
     </AuthProvider>
   );
-  expect(screen.getByRole("heading", { name: /Admin Portal/i })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /Welcome Back/i })).toBeInTheDocument();
 
   const user = screen.getByLabelText(/Username/i);
   const pass = screen.getByLabelText(/Password/i);
-  const btn = screen.getByRole("button", { name: /Log In/i });
+  const btn = screen.getByRole("button", { name: /Sign In/i });
 
   fireEvent.change(user, { target: { value: "admin" } });
   fireEvent.change(pass, { target: { value: "password" } });

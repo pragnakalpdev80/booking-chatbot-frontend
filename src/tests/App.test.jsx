@@ -7,7 +7,7 @@ test("renders App without crashing", async () => {
   global.fetch = () =>
     Promise.resolve({
       ok: true,
-      json: () => Promise.resolve({ session_key: "fake-session" }),
+      json: () => Promise.resolve({ data: { session_key: "fake-session" } }),
     });
 
   await act(async () => {

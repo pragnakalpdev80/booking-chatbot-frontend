@@ -10,9 +10,10 @@ test("renders and interacts with Chatbot", async () => {
       ok: true,
       json: () =>
         Promise.resolve({
-          session_key: "fake-session",
-          role: "assistant",
-          content: "Reply message",
+          data: {
+            session_key: "fake-session",
+            response: "Reply message",
+          },
         }),
     });
 
@@ -24,10 +25,10 @@ test("renders and interacts with Chatbot", async () => {
     );
   });
 
-  expect(screen.getByText(/Scheduling Bot/i)).toBeInTheDocument();
+  expect(screen.getByText(/Booking Assistant/i)).toBeInTheDocument();
 
   // Test input
-  const input = screen.getByPlaceholderText(/Ask for an appointment.../i);
+  const input = screen.getByPlaceholderText(/Type your message.../i);
   fireEvent.change(input, { target: { value: "Hello" } });
 
   // Test sending message
