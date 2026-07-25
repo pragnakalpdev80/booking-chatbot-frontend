@@ -2,4 +2,4 @@ echo "Running frontend security checks (npm audit)..."
 npm audit --audit-level=high
 
 echo "Running semgrep for frontend..."
-../venv/bin/semgrep --config p/javascript --error .
+../calendar-chatbot/.venv/bin/semgrep --config p/javascript --error .
