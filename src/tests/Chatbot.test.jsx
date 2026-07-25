@@ -3,10 +3,21 @@ import { BrowserRouter } from "react-router-dom";
 import Chatbot from "../pages/Chatbot";
 
 test("renders and interacts with Chatbot", async () => {
+  sessionStorage.clear();
+
   window.HTMLElement.prototype.scrollIntoView = function () {};
 
-  global.fetch = () =>
-    Promise.resolve({
+  global.fetch = vi.fn((url) => {
+    if (url.includes("/providers/")) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            data: [{ id: 1, name: "Dr. Mock", specialty: "Tests" }],
+          }),
+      });
+    }
+    return Promise.resolve({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -16,6 +27,9 @@ test("renders and interacts with Chatbot", async () => {
           },
         }),
     });
+  });
+
+  sessionStorage.setItem("selectedProvider", "1");
 
   await act(async () => {
     render(
@@ -25,7 +39,8 @@ test("renders and interacts with Chatbot", async () => {
     );
   });
 
-  expect(screen.getByText(/Booking Assistant/i)).toBeInTheDocument();
+  // 1. Now the chat UI should be visible
+  expect(await screen.findByText(/Booking Assistant/i)).toBeInTheDocument();
 
   // Test input
   const input = screen.getByPlaceholderText(/Type your message.../i);

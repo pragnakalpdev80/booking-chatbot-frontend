@@ -1,13 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
-import QuickReplyGroup from "../components/QuickReplyGroup";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = "/api/v1";
 
-function App() {
-  const [sessionKey, setSessionKey] = useState(null);
-  const [messages, setMessages] = useState([]);
+function Chatbot() {
+  const navigate = useNavigate();
+  const [selectedProvider] = useState(() => sessionStorage.getItem("selectedProvider") || null);
+  const [sessionKey, setSessionKey] = useState(() => sessionStorage.getItem("sessionKey") || null);
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("chatMessages");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
@@ -26,27 +35,34 @@ function App() {
   // Start session on mount
   useEffect(() => {
     const startSession = async () => {
+      if (!selectedProvider) return; // Wait until provider is selected
+      if (sessionKey) return; // Do not start a new session if one is already active in sessionStorage
+
       try {
         const response = await fetch(`${API_BASE}/chat/sessions/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ provider_id: 1 }),
+          body: JSON.stringify({ provider_id: selectedProvider }),
         });
         if (!response.ok) throw new Error("Failed to start session");
 
         const data = await response.json();
-        setSessionKey(data.data.session_key);
+        const newSessionKey = data.data.session_key;
+        setSessionKey(newSessionKey);
+        sessionStorage.setItem("sessionKey", newSessionKey);
 
         // Initial greeting
-        setMessages([
+        const initialMessages = [
           {
             id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
             role: "assistant",
             content: "Hello! I am your AI scheduling assistant. How can I help you today?",
           },
-        ]);
+        ];
+        setMessages(initialMessages);
+        sessionStorage.setItem("chatMessages", JSON.stringify(initialMessages));
       } catch (err) {
         console.error(err);
         setError("Could not connect to the server. Is Django running?");
@@ -54,7 +70,7 @@ function App() {
     };
 
     startSession();
-  }, []);
+  }, [selectedProvider, sessionKey]);
 
   const handleSend = async (textOverride) => {
     const userMessage = (typeof textOverride === "string" ? textOverride : inputValue).trim();
@@ -66,14 +82,18 @@ function App() {
     setError(null);
 
     // Add user message to UI
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
-        role: "user",
-        content: userMessage,
-      },
-    ]);
+    setMessages((prev) => {
+      const newMsgs = [
+        ...prev,
+        {
+          id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
+          role: "user",
+          content: userMessage,
+        },
+      ];
+      sessionStorage.setItem("chatMessages", JSON.stringify(newMsgs));
+      return newMsgs;
+    });
     setIsTyping(true);
 
     try {
@@ -92,14 +112,18 @@ function App() {
 
       const data = await response.json();
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
-          role: "assistant",
-          content: data.data.response,
-        },
-      ]);
+      setMessages((prev) => {
+        const newMsgs = [
+          ...prev,
+          {
+            id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
+            role: "assistant",
+            content: data.data.response,
+          },
+        ];
+        sessionStorage.setItem("chatMessages", JSON.stringify(newMsgs));
+        return newMsgs;
+      });
     } catch (err) {
       console.error(err);
       setError("An error occurred while sending the message.");
@@ -122,6 +146,17 @@ function App() {
       handleSend();
     }
   };
+
+  // Main render logic
+  useEffect(() => {
+    if (!selectedProvider) {
+      navigate("/");
+    }
+  }, [selectedProvider, navigate]);
+
+  if (!selectedProvider) {
+    return null;
+  }
 
   return (
     <div className="chat-landing-wrapper" style={{ position: "relative" }}>
@@ -160,14 +195,13 @@ function App() {
               msg.role === "assistant" && index === messages.length - 1;
             return (
               <React.Fragment key={msg.id}>
-                <ChatMessage role={msg.role} content={msg.content} />
-                {msg.role === "assistant" && (
-                  <QuickReplyGroup
-                    messageContent={msg.content}
-                    onReply={handleSend}
-                    disabled={!isLastAssistantMessage || isTyping}
-                  />
-                )}
+                <ChatMessage
+                  role={msg.role}
+                  content={msg.content}
+                  onReply={handleSend}
+                  disabled={!isLastAssistantMessage || isTyping}
+                  isTyping={isTyping}
+                />
               </React.Fragment>
             );
           })}
@@ -211,4 +245,4 @@ function App() {
   );
 }
 
-export default App;
+export default Chatbot;

@@ -1,10 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import ProviderSelector from "./components/ProviderSelector";
 import Chatbot from "./pages/Chatbot";
 import ProviderLogin from "./pages/ProviderLogin";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import Settings from "./pages/Settings";
+import MockPayment from "./pages/MockPayment";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 
 const PrivateRoute = ({ children }) => {
@@ -15,7 +17,9 @@ const PrivateRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Chatbot />} />
+      <Route path="/" element={<ProviderSelector />} />
+      <Route path="/chat" element={<Chatbot />} />
+      <Route path="/mock-pay/:orderId" element={<MockPayment />} />
       <Route path="/provider/login" element={<ProviderLogin />} />
       <Route
         path="/provider"
