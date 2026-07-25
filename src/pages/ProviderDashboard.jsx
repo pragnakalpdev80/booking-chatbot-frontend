@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE = "/api/v1";
@@ -8,7 +9,13 @@ function ProviderDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filterError, setFilterError] = useState("");
   const { token } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const startDate = searchParams.get("start_date") || "";
+  const endDate = searchParams.get("end_date") || "";
+  const emailQuery = searchParams.get("email") || "";
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -23,12 +30,17 @@ function ProviderDashboard() {
         setStats(statsData.data);
 
         // Fetch appointments
-        const apptsRes = await fetch(`${API_BASE}/dashboard/appointments/`, {
+        const query = new URLSearchParams();
+        if (startDate) query.append("start_date", startDate);
+        if (endDate) query.append("end_date", endDate);
+        if (emailQuery) query.append("email", emailQuery);
+
+        const apptsRes = await fetch(`${API_BASE}/dashboard/appointments/?${query.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!apptsRes.ok) throw new Error("Failed to fetch appointments");
         const apptsData = await apptsRes.json();
-        setAppointments(apptsData.data.appointments || []);
+        setAppointments(apptsData.data || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -39,7 +51,44 @@ function ProviderDashboard() {
     if (token) {
       fetchDashboardData();
     }
-  }, [token]);
+  }, [token, startDate, endDate, emailQuery]);
+
+  const handleStartDateChange = (e) => {
+    const newStart = e.target.value;
+    if (newStart && endDate) {
+      if (new Date(newStart) > new Date(endDate)) {
+        setFilterError("Start date cannot be after end date.");
+        return;
+      }
+    }
+    setFilterError("");
+    setSearchParams((prev) => {
+      if (newStart) prev.set("start_date", newStart);
+      else prev.delete("start_date");
+      return prev;
+    });
+  };
+
+  const handleEndDateChange = (e) => {
+    const newEnd = e.target.value;
+    if (startDate && newEnd) {
+      if (new Date(startDate) > new Date(newEnd)) {
+        setFilterError("End date cannot be before start date.");
+        return;
+      }
+    }
+    setFilterError("");
+    setSearchParams((prev) => {
+      if (newEnd) prev.set("end_date", newEnd);
+      else prev.delete("end_date");
+      return prev;
+    });
+  };
+
+  const clearFilters = () => {
+    setFilterError("");
+    setSearchParams({});
+  };
 
   if (loading) {
     return <div style={{ padding: "2rem" }}>Loading dashboard...</div>;
@@ -52,10 +101,13 @@ function ProviderDashboard() {
   return (
     <div>
       <div className="stats-grid">
-        <div className="card stat-card">
+        <div
+          className="glass-card stat-card animate-stagger-1"
+          style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
+        >
           <div className="stat-info">
             <h3>Total Bookings</h3>
-            <div className="stat-value">{stats?.total_bookings || 0}</div>
+            <div className="stat-value">{stats?.total || 0}</div>
           </div>
           <div className="stat-icon primary">
             <svg
@@ -76,10 +128,13 @@ function ProviderDashboard() {
           </div>
         </div>
 
-        <div className="card stat-card">
+        <div
+          className="glass-card stat-card animate-stagger-2"
+          style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
+        >
           <div className="stat-info">
             <h3>Upcoming</h3>
-            <div className="stat-value">{stats?.upcoming_bookings || 0}</div>
+            <div className="stat-value">{stats?.upcoming || 0}</div>
           </div>
           <div className="stat-icon success">
             <svg
@@ -98,10 +153,13 @@ function ProviderDashboard() {
           </div>
         </div>
 
-        <div className="card stat-card">
+        <div
+          className="glass-card stat-card animate-stagger-3"
+          style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
+        >
           <div className="stat-info">
             <h3>Cancelled</h3>
-            <div className="stat-value">{stats?.cancelled_bookings || 0}</div>
+            <div className="stat-value">{stats?.cancelled || 0}</div>
           </div>
           <div className="stat-icon danger">
             <svg
@@ -121,8 +179,108 @@ function ProviderDashboard() {
         </div>
       </div>
 
-      <div className="card" style={{ padding: "1.5rem", marginTop: "2rem" }}>
-        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>Recent Appointments</h2>
+      {filterError && (
+        <div className="error-banner" style={{ marginTop: "1.5rem", marginBottom: "0" }}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ flexShrink: 0 }}
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {filterError}
+        </div>
+      )}
+
+      <div
+        className="glass-card animate-stagger-4"
+        style={{
+          padding: "1.5rem",
+          marginTop: filterError ? "1rem" : "2rem",
+          display: "flex",
+          gap: "1rem",
+          alignItems: "flex-end",
+          flexWrap: "wrap",
+          animation: "slideFadeUp 0.4s forwards",
+          opacity: 0,
+        }}
+      >
+        <div className="form-group" style={{ flex: 1, minWidth: "200px", margin: 0 }}>
+          <label
+            style={{
+              marginBottom: "0.5rem",
+              display: "block",
+              color: "var(--text-secondary)",
+              fontSize: "0.875rem",
+            }}
+          >
+            Search by Email
+          </label>
+          <input
+            type="email"
+            placeholder="client@example.com"
+            value={emailQuery}
+            onChange={(e) =>
+              setSearchParams((prev) => {
+                if (e.target.value) {
+                  prev.set("email", e.target.value);
+                } else {
+                  prev.delete("email");
+                }
+                return prev;
+              })
+            }
+          />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label
+            style={{
+              marginBottom: "0.5rem",
+              display: "block",
+              color: "var(--text-secondary)",
+              fontSize: "0.875rem",
+            }}
+          >
+            Start Date
+          </label>
+          <input type="date" value={startDate} onChange={handleStartDateChange} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label
+            style={{
+              marginBottom: "0.5rem",
+              display: "block",
+              color: "var(--text-secondary)",
+              fontSize: "0.875rem",
+            }}
+          >
+            End Date
+          </label>
+          <input type="date" value={endDate} onChange={handleEndDateChange} />
+        </div>
+        <button className="btn-secondary" onClick={clearFilters}>
+          Clear
+        </button>
+      </div>
+
+      <div
+        className="glass-card animate-stagger-5"
+        style={{
+          padding: "1.5rem",
+          marginTop: "1rem",
+          animation: "slideFadeUp 0.4s forwards",
+          opacity: 0,
+        }}
+      >
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>Confirmed Appointments</h2>
         <div className="table-container">
           <table className="data-table">
             <thead>
@@ -131,7 +289,6 @@ function ProviderDashboard() {
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Reason</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -144,14 +301,11 @@ function ProviderDashboard() {
                     <td>{new Date(appt.start_time).toLocaleString()}</td>
                     <td>{new Date(appt.end_time).toLocaleTimeString()}</td>
                     <td>{appt.reason || "N/A"}</td>
-                    <td>
-                      <span className={`badge ${appt.status.toLowerCase()}`}>{appt.status}</span>
-                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center", color: "var(--text-secondary)" }}>
+                  <td colSpan="4" style={{ textAlign: "center", color: "var(--text-secondary)" }}>
                     No appointments found.
                   </td>
                 </tr>

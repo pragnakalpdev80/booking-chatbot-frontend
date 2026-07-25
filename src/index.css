@@ -715,6 +715,17 @@ h6 {
   }
 }
 
+@keyframes slideFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Options / Quick Replies */
 .chat-option-btn {
   background: var(--bg-surface);
