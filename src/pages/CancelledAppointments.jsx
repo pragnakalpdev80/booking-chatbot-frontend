@@ -28,21 +28,22 @@ function CancelledAppointments() {
         if (emailQuery) query.append("email", emailQuery);
         query.append("page", currentPage.toString());
 
-        const res = await fetch(`${API_BASE}/dashboard/appointments/cancelled/?${query.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
+        const res = await fetch(
+          `${API_BASE}/dashboard/appointments/cancelled/?${query.toString()}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         if (!res.ok) {
           if (res.status === 404) {
-            // DRF returns 404 for invalid pages. Treat as empty.
             setData({ count: 0, results: [] });
             return;
           }
           throw new Error("Failed to fetch cancelled appointments");
         }
-        
+
         const json = await res.json();
-        // Since we updated ApiResponse, data is in json.data and count is in json.count
         setData({ count: json.count || 0, results: json.data || [] });
       } catch (err) {
         setError(err.message);
@@ -121,7 +122,7 @@ function CancelledAppointments() {
       </div>
 
       {filterError && (
-        <div className="error-banner" style={{ marginBottom: "1rem" }}>
+        <div className="banner banner-error" style={{ marginBottom: "1rem" }}>
           <svg
             width="20"
             height="20"
@@ -131,7 +132,6 @@ function CancelledAppointments() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ flexShrink: 0 }}
           >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -141,68 +141,75 @@ function CancelledAppointments() {
         </div>
       )}
 
-      <div
-        className="glass-card animate-stagger-1"
-        style={{
-          padding: "1.5rem",
-          display: "flex",
-          gap: "1rem",
-          alignItems: "flex-end",
-          flexWrap: "wrap",
-          animation: "slideFadeUp 0.4s forwards",
-          opacity: 0,
-          marginBottom: "1rem",
-        }}
-      >
-        <div className="form-group" style={{ flex: 1, minWidth: "200px", margin: 0 }}>
-          <label
-            htmlFor="emailSearch"
-            style={{ marginBottom: "0.5rem", display: "block", color: "var(--text-secondary)", fontSize: "0.875rem" }}
-          >
-            Search by Email
-          </label>
-          <input
-            id="emailSearch"
-            type="email"
-            placeholder="client@example.com"
-            value={emailQuery}
-            onChange={handleEmailSearch}
-          />
+      <div className="card" style={{ marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div className="form-group" style={{ flex: 1, minWidth: "200px", margin: 0 }}>
+            <label htmlFor="emailSearch" className="form-label">
+              Search by Email
+            </label>
+            <input
+              id="emailSearch"
+              type="email"
+              className="form-input"
+              placeholder="client@example.com"
+              value={emailQuery}
+              onChange={handleEmailSearch}
+            />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label htmlFor="startDate" className="form-label">
+              Start Date
+            </label>
+            <input
+              id="startDate"
+              type="date"
+              className="form-input"
+              value={startDate}
+              onChange={handleStartDateChange}
+            />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label htmlFor="endDate" className="form-label">
+              End Date
+            </label>
+            <input
+              id="endDate"
+              type="date"
+              className="form-input"
+              value={endDate}
+              onChange={handleEndDateChange}
+            />
+          </div>
+          <button type="button" className="btn btn-secondary" onClick={clearFilters}>
+            Clear
+          </button>
         </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label
-            htmlFor="startDate"
-            style={{ marginBottom: "0.5rem", display: "block", color: "var(--text-secondary)", fontSize: "0.875rem" }}
-          >
-            Start Date
-          </label>
-          <input id="startDate" type="date" value={startDate} onChange={handleStartDateChange} />
-        </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label
-            htmlFor="endDate"
-            style={{ marginBottom: "0.5rem", display: "block", color: "var(--text-secondary)", fontSize: "0.875rem" }}
-          >
-            End Date
-          </label>
-          <input id="endDate" type="date" value={endDate} onChange={handleEndDateChange} />
-        </div>
-        <button type="button" className="btn-secondary" onClick={clearFilters}>
-          Clear
-        </button>
       </div>
 
-      <div
-        className="glass-card animate-stagger-2"
-        style={{ padding: "1.5rem", animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
-      >
+      <div className="table-card">
         {error ? (
-          <div className="error-banner">{error}</div>
+          <div className="banner banner-error" style={{ margin: "1.5rem" }}>
+            {error}
+          </div>
         ) : loading ? (
-          <div style={{ padding: "2rem", textAlign: "center" }}>Loading appointments...</div>
+          <div style={{ padding: "3rem", textAlign: "center" }}>
+            <div
+              className="typing-dot"
+              style={{
+                display: "inline-block",
+                width: "12px",
+                height: "12px",
+                background: "var(--brand-primary)",
+                animationDuration: "1s",
+              }}
+            ></div>
+            <p style={{ marginTop: "1rem", color: "var(--text-secondary)" }}>
+              Loading appointments...
+            </p>
+          </div>
         ) : (
           <>
-            <div className="table-container">
+            <div className="table-responsive">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -216,23 +223,58 @@ function CancelledAppointments() {
                   {data.results.length > 0 ? (
                     data.results.map((appt) => (
                       <tr key={appt.id}>
-                        <td><strong>{appt.email}</strong></td>
                         <td>
-                          {new Date(appt.start_time).toLocaleDateString()} at{" "}
-                          {new Date(appt.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <div style={{ fontWeight: "500", color: "var(--text-main)" }}>
+                            {appt.email}
+                          </div>
                         </td>
                         <td>
-                          <span className="status-badge cancelled">
-                            {appt.status}
-                          </span>
+                          <div style={{ fontWeight: "500" }}>
+                            {new Date(appt.start_time).toLocaleDateString(undefined, {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </div>
+                          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                            {new Date(appt.start_time).toLocaleTimeString(undefined, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}{" "}
+                            -{" "}
+                            {new Date(appt.end_time).toLocaleTimeString(undefined, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge badge-danger">Cancelled</span>
                         </td>
                         <td>{appt.reason || "N/A"}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: "center", color: "var(--text-secondary)" }}>
-                        No cancelled appointments found.
+                      <td colSpan="4">
+                        <div className="empty-state">
+                          <svg
+                            width="48"
+                            height="48"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            ></path>
+                          </svg>
+                          <h3>No Cancelled Appointments</h3>
+                          <p>No cancelled appointments match your current filters.</p>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -240,17 +282,28 @@ function CancelledAppointments() {
               </table>
             </div>
 
-            <div style={{ marginTop: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-                Showing {data.results.length} of {data.count} results
+            {data.count > 0 && (
+              <div
+                style={{
+                  padding: "1.5rem",
+                  borderTop: "1px solid var(--border-light)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+                  Showing <strong>{data.results.length}</strong> of <strong>{data.count}</strong>{" "}
+                  results
+                </div>
+                <Pagination
+                  count={data.count}
+                  pageSize={10}
+                  currentPage={currentPage}
+                  onPageChange={handlePageChange}
+                />
               </div>
-              <Pagination
-                count={data.count}
-                pageSize={10}
-                currentPage={currentPage}
-                onPageChange={handlePageChange}
-              />
-            </div>
+            )}
           </>
         )}
       </div>

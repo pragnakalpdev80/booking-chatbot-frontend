@@ -50,7 +50,7 @@ test("renders and interacts with ProviderDashboard", async () => {
     );
   });
 
-  expect(screen.getByText(/Upcoming Appointments/i)).toBeInTheDocument();
+  expect(screen.getAllByText(/Upcoming Appointments/i)[0]).toBeInTheDocument();
   expect(screen.getByText(/Total Bookings/i)).toBeInTheDocument();
 
   localStorage.removeItem("admin_token");

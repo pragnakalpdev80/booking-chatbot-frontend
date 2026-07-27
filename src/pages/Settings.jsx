@@ -14,7 +14,6 @@ function Settings() {
   const [success, setSuccess] = useState("");
   const { token } = useAuth();
 
-  // Saving states per section
   const [savingGeneral, setSavingGeneral] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [savingBreaks, setSavingBreaks] = useState(false);
@@ -138,9 +137,8 @@ function Settings() {
     if (!updated[dayIndex]) updated[dayIndex] = { is_active: false, start: "09:00", end: "17:00" };
     updated[dayIndex][field] = value;
 
-    // If a day becomes inactive, remove any breaks associated with it
     if (field === "is_active" && value === false) {
-      const updatedBreaks = settings.break_times.filter(br => br.weekday !== parseInt(dayIndex));
+      const updatedBreaks = settings.break_times.filter((br) => br.weekday !== parseInt(dayIndex));
       setSettings({ ...settings, day_schedules: updated, break_times: updatedBreaks });
       return;
     }
@@ -148,7 +146,6 @@ function Settings() {
     setSettings({ ...settings, day_schedules: updated });
   };
 
-  // Compute active days for breaks dropdown
   const activeDays = WEEKDAYS.map((day, index) => ({ name: day, index })).filter(
     (d) => settings?.day_schedules?.[String(d.index)]?.is_active
   );
@@ -160,7 +157,10 @@ function Settings() {
     }
     setSettings({
       ...settings,
-      break_times: [...settings.break_times, { weekday: activeDays[0].index, start: "12:00", end: "13:00", label: "Lunch" }],
+      break_times: [
+        ...settings.break_times,
+        { weekday: activeDays[0].index, start: "12:00", end: "13:00", label: "Lunch" },
+      ],
     });
   };
 
@@ -195,181 +195,540 @@ function Settings() {
     setSettings({ ...settings, holidays: updated });
   };
 
-  if (loading) return <div>Loading settings...</div>;
+  if (loading) {
+    return (
+      <div style={{ padding: "3rem", textAlign: "center" }}>
+        <div
+          className="typing-dot"
+          style={{
+            display: "inline-block",
+            width: "12px",
+            height: "12px",
+            background: "var(--brand-primary)",
+            animationDuration: "1s",
+          }}
+        ></div>
+        <p style={{ marginTop: "1rem", color: "var(--text-secondary)" }}>Loading settings...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="card" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-        <h2>Provider Settings & Availability</h2>
-        <button type="button" className="btn-secondary" onClick={handleConnectGoogle}>
-           Connect Google Calendar
+    <div style={{ maxWidth: "1200px", margin: "0 auto", paddingBottom: "3rem" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "2rem",
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Provider Settings</h1>
+          <p style={{ color: "var(--text-secondary)" }}>
+            Manage your profile, availability, and business rules.
+          </p>
+        </div>
+        <button type="button" className="btn btn-secondary" onClick={handleConnectGoogle}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Connect Google Calendar
         </button>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div className="banner banner-error">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {error}
+        </div>
+      )}
+
       {success && (
-        <div style={{ background: "#ECFDF5", color: "#059669", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem" }}>
+        <div className="banner banner-success">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
           {success}
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "2.5rem", alignItems: "start" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))",
+          gap: "2rem",
+          alignItems: "start",
+        }}
+      >
         {/* Left Column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
-        {/* Section 1: General Settings */}
-        <section>
-          <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #E5E7EB", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
-            <h3 style={{ margin: 0 }}>General Settings</h3>
-            <button className="btn-primary" style={{ padding: "0.25rem 0.75rem", fontSize: "0.875rem" }} onClick={saveGeneralSettings} disabled={savingGeneral}>
-              {savingGeneral ? "Saving..." : "Save General Settings"}
-            </button>
-          </div>
-          <div className="form-row">
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          <div className="card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.5rem",
+                borderBottom: "1px solid var(--border-light)",
+                paddingBottom: "1rem",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "1.125rem" }}>General Profile</h3>
+              <button
+                className="btn btn-primary"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+                onClick={saveGeneralSettings}
+                disabled={savingGeneral}
+              >
+                {savingGeneral ? "Saving..." : "Save"}
+              </button>
+            </div>
+
             <div className="form-group">
-              <label htmlFor="providerName">Provider Name</label>
+              <label htmlFor="providerName" className="form-label">
+                Provider Name
+              </label>
               <input
                 id="providerName"
                 type="text"
+                className="form-input"
                 value={settings?.provider_name || ""}
                 onChange={(e) => setSettings({ ...settings, provider_name: e.target.value })}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="timezone">Timezone</label>
+              <label htmlFor="timezone" className="form-label">
+                Timezone
+              </label>
               <input
                 id="timezone"
                 type="text"
+                className="form-input"
                 value={settings?.timezone || ""}
                 onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
               />
             </div>
-          </div>
-          <div className="form-group" style={{ marginTop: "1rem" }}>
-            <label>Slot Duration</label>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              {SLOT_DURATIONS.map(dur => (
-                <button
-                  key={dur}
-                  type="button"
-                  onClick={() => setSettings({ ...settings, slot_duration: dur })}
-                  style={{
-                    padding: "0.5rem 1rem",
-                    borderRadius: "9999px",
-                    border: settings?.slot_duration === dur ? "2px solid var(--brand-blue)" : "1px solid #D1D5DB",
-                    background: settings?.slot_duration === dur ? "#EFF6FF" : "#FFF",
-                    color: settings?.slot_duration === dur ? "var(--brand-blue)" : "#4B5563",
-                    cursor: "pointer",
-                    fontWeight: settings?.slot_duration === dur ? "600" : "400"
-                  }}
-                >
-                  {dur} mins
-                </button>
-              ))}
+
+            <div className="form-group" style={{ marginTop: "1rem" }}>
+              <label className="form-label">Slot Duration</label>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                {SLOT_DURATIONS.map((dur) => (
+                  <button
+                    key={dur}
+                    type="button"
+                    onClick={() => setSettings({ ...settings, slot_duration: dur })}
+                    style={{
+                      padding: "0.5rem 1.25rem",
+                      borderRadius: "var(--radius-full)",
+                      border:
+                        settings?.slot_duration === dur
+                          ? "2px solid var(--brand-primary)"
+                          : "1px solid var(--border-light)",
+                      background:
+                        settings?.slot_duration === dur
+                          ? "var(--brand-primary-light)"
+                          : "var(--bg-surface)",
+                      color:
+                        settings?.slot_duration === dur
+                          ? "var(--brand-primary)"
+                          : "var(--text-secondary)",
+                      cursor: "pointer",
+                      fontWeight: "500",
+                      fontSize: "0.875rem",
+                      transition: "all var(--transition-fast)",
+                    }}
+                  >
+                    {dur} mins
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Section 2: Weekly Schedule */}
-        <section>
-          <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #E5E7EB", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
-            <h3 style={{ margin: 0 }}>Weekly Schedule</h3>
-            <button className="btn-primary" style={{ padding: "0.25rem 0.75rem", fontSize: "0.875rem" }} onClick={saveSchedule} disabled={savingSchedule}>
-              {savingSchedule ? "Saving..." : "Save Schedule"}
-            </button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {WEEKDAYS.map((day, idx) => {
-              const dayStr = String(idx);
-              const dayObj = settings?.day_schedules?.[dayStr] || { is_active: false, start: "09:00", end: "17:00" };
-              return (
-                <div key={day} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  <div style={{ width: "120px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <input
-                      type="checkbox"
-                      checked={dayObj.is_active}
-                      onChange={(e) => updateDaySchedule(dayStr, "is_active", e.target.checked)}
-                    />
-                    <label style={{ margin: 0 }}>{day}</label>
-                  </div>
-                  {dayObj.is_active ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <input type="time" value={dayObj.start} onChange={(e) => updateDaySchedule(dayStr, "start", e.target.value)} />
-                      <span>to</span>
-                      <input type="time" value={dayObj.end} onChange={(e) => updateDaySchedule(dayStr, "end", e.target.value)} />
-                    </div>
-                  ) : (
-                    <div style={{ color: "#9CA3AF" }}>Closed</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-        </div>
-
-        {/* Right Column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
-
-        {/* Section 3: Break Times */}
-        <section>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #E5E7EB", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
-            <h3 style={{ margin: 0 }}>Break Times</h3>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <button type="button" onClick={addBreak} style={{ background: "none", border: "none", color: "var(--brand-blue)", cursor: "pointer", fontWeight: "600" }}>+ Add Break</button>
-              <button className="btn-primary" style={{ padding: "0.25rem 0.75rem", fontSize: "0.875rem" }} onClick={saveBreaks} disabled={savingBreaks}>
+          <div className="card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.5rem",
+                borderBottom: "1px solid var(--border-light)",
+                paddingBottom: "1rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Break Times</h3>
+                <button
+                  type="button"
+                  onClick={addBreak}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--brand-primary)",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "0.875rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Break
+                </button>
+              </div>
+              <button
+                className="btn btn-primary"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+                onClick={saveBreaks}
+                disabled={savingBreaks}
+              >
                 {savingBreaks ? "Saving..." : "Save Breaks"}
               </button>
             </div>
+
+            {(!settings?.break_times || settings.break_times.length === 0) && (
+              <div className="empty-state" style={{ padding: "2rem 1rem" }}>
+                <p>No break times configured.</p>
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {settings?.break_times?.map((brk, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <select
+                    className="form-select"
+                    style={{ padding: "0.4rem", flex: "1 1 100px" }}
+                    value={brk.weekday}
+                    onChange={(e) => updateBreak(idx, "weekday", parseInt(e.target.value))}
+                  >
+                    {activeDays.map((d) => (
+                      <option key={d.index} value={d.index}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="time"
+                    className="form-input"
+                    style={{ padding: "0.4rem", flex: "1 1 100px" }}
+                    value={brk.start}
+                    onChange={(e) => updateBreak(idx, "start", e.target.value)}
+                  />
+                  <span style={{ color: "var(--text-tertiary)" }}>-</span>
+                  <input
+                    type="time"
+                    className="form-input"
+                    style={{ padding: "0.4rem", flex: "1 1 100px" }}
+                    value={brk.end}
+                    onChange={(e) => updateBreak(idx, "end", e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ padding: "0.4rem", flex: "2 1 150px" }}
+                    placeholder="Label (e.g. Lunch)"
+                    value={brk.label}
+                    onChange={(e) => updateBreak(idx, "label", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeBreak(idx)}
+                    className="icon-btn danger"
+                    title="Remove Break"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-          {(!settings?.break_times || settings.break_times.length === 0) && (
-            <p style={{ color: "#6B7280" }}>No break times configured.</p>
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {settings?.break_times?.map((brk, idx) => (
-              <div key={idx} style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-                <select value={brk.weekday} onChange={(e) => updateBreak(idx, "weekday", parseInt(e.target.value))} style={{ padding: "0.5rem", borderRadius: "4px", border: "1px solid #D1D5DB" }}>
-                  {activeDays.map((d) => <option key={d.index} value={d.index}>{d.name}</option>)}
-                </select>
-                <input type="time" value={brk.start} onChange={(e) => updateBreak(idx, "start", e.target.value)} />
-                <span>to</span>
-                <input type="time" value={brk.end} onChange={(e) => updateBreak(idx, "end", e.target.value)} />
-                <input type="text" placeholder="Label (e.g. Lunch)" value={brk.label} onChange={(e) => updateBreak(idx, "label", e.target.value)} />
-                <button type="button" onClick={() => removeBreak(idx)} style={{ background: "#FEE2E2", border: "1px solid #FECACA", color: "#DC2626", cursor: "pointer", padding: "0.5rem", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }} title="Remove Break">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+
+          <div className="card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.5rem",
+                borderBottom: "1px solid var(--border-light)",
+                paddingBottom: "1rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Holidays & Time Off</h3>
+                <button
+                  type="button"
+                  onClick={addHoliday}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--brand-primary)",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "0.875rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Holiday
                 </button>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Section 4: Holidays */}
-        <section>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #E5E7EB", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
-            <h3 style={{ margin: 0 }}>Holidays / Days Off</h3>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <button type="button" onClick={addHoliday} style={{ background: "none", border: "none", color: "var(--brand-blue)", cursor: "pointer", fontWeight: "600" }}>+ Add Holiday</button>
-              <button className="btn-primary" style={{ padding: "0.25rem 0.75rem", fontSize: "0.875rem" }} onClick={saveHolidays} disabled={savingHolidays}>
+              <button
+                className="btn btn-primary"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+                onClick={saveHolidays}
+                disabled={savingHolidays}
+              >
                 {savingHolidays ? "Saving..." : "Save Holidays"}
               </button>
             </div>
-          </div>
-          {(!settings?.holidays || settings.holidays.length === 0) && (
-            <p style={{ color: "#6B7280" }}>No holidays configured.</p>
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {settings?.holidays?.map((hol, idx) => (
-              <div key={idx} style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-                <input type="date" min={TODAY} value={hol.date} onChange={(e) => updateHoliday(idx, "date", e.target.value)} />
-                <input type="text" placeholder="Label (e.g. Christmas)" value={hol.label} onChange={(e) => updateHoliday(idx, "label", e.target.value)} />
-                <button type="button" onClick={() => removeHoliday(idx)} style={{ background: "#FEE2E2", border: "1px solid #FECACA", color: "#DC2626", cursor: "pointer", padding: "0.5rem", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }} title="Remove Holiday">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
 
-      </div>
+            {(!settings?.holidays || settings.holidays.length === 0) && (
+              <div className="empty-state" style={{ padding: "2rem 1rem" }}>
+                <p>No holidays configured.</p>
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {settings?.holidays?.map((hol, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <input
+                    type="date"
+                    className="form-input"
+                    style={{ padding: "0.4rem", flex: "1 1 120px" }}
+                    min={TODAY}
+                    value={hol.date}
+                    onChange={(e) => updateHoliday(idx, "date", e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ padding: "0.4rem", flex: "2 1 150px" }}
+                    placeholder="Label (e.g. Christmas)"
+                    value={hol.label}
+                    onChange={(e) => updateHoliday(idx, "label", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeHoliday(idx)}
+                    className="icon-btn danger"
+                    title="Remove Holiday"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          <div className="card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.5rem",
+                borderBottom: "1px solid var(--border-light)",
+                paddingBottom: "1rem",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Weekly Schedule</h3>
+              <button
+                className="btn btn-primary"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+                onClick={saveSchedule}
+                disabled={savingSchedule}
+              >
+                {savingSchedule ? "Saving..." : "Save Schedule"}
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {WEEKDAYS.map((day, idx) => {
+                const dayStr = String(idx);
+                const dayObj = settings?.day_schedules?.[dayStr] || {
+                  is_active: false,
+                  start: "09:00",
+                  end: "17:00",
+                };
+                return (
+                  <div
+                    key={day}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                        width: "140px",
+                      }}
+                    >
+                      <label className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={dayObj.is_active}
+                          onChange={(e) => updateDaySchedule(dayStr, "is_active", e.target.checked)}
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                      <span
+                        style={{
+                          fontWeight: "500",
+                          color: dayObj.is_active ? "var(--text-main)" : "var(--text-tertiary)",
+                        }}
+                      >
+                        {day}
+                      </span>
+                    </div>
+
+                    {dayObj.is_active ? (
+                      <div
+                        style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}
+                      >
+                        <input
+                          type="time"
+                          className="form-input"
+                          style={{ padding: "0.4rem", flex: 1 }}
+                          value={dayObj.start}
+                          onChange={(e) => updateDaySchedule(dayStr, "start", e.target.value)}
+                        />
+                        <span style={{ color: "var(--text-tertiary)", fontSize: "0.875rem" }}>
+                          to
+                        </span>
+                        <input
+                          type="time"
+                          className="form-input"
+                          style={{ padding: "0.4rem", flex: 1 }}
+                          value={dayObj.end}
+                          onChange={(e) => updateDaySchedule(dayStr, "end", e.target.value)}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          flex: 1,
+                          color: "var(--text-tertiary)",
+                          fontSize: "0.875rem",
+                          paddingLeft: "0.5rem",
+                        }}
+                      >
+                        Closed
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

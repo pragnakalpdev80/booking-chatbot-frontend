@@ -90,8 +90,6 @@ export default function MockPayment() {
     marginBottom: "2rem",
   };
 
-
-
   const renderContent = () => {
     if (stage === "loading" || stage === "processing") {
       return (
@@ -139,7 +137,12 @@ export default function MockPayment() {
           </div>
           <h2 style={titleStyle}>Payment Successful!</h2>
           <p style={textStyle}>Your booking has been confirmed. You can now return to the chat.</p>
-          <button type="button" className="btn-primary" style={{ width: "100%", marginTop: "1.5rem" }} onClick={() => navigate("/chat")}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ width: "100%", marginTop: "1.5rem" }}
+            onClick={() => navigate("/chat")}
+          >
             Return to Chat
           </button>
         </div>
@@ -165,7 +168,12 @@ export default function MockPayment() {
           </div>
           <h2 style={titleStyle}>Payment Failed</h2>
           <p style={textStyle}>Unfortunately, your payment could not be processed.</p>
-          <button type="button" className="btn-primary" style={{ width: "100%", marginTop: "1.5rem" }} onClick={() => navigate("/chat")}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ width: "100%", marginTop: "1.5rem" }}
+            onClick={() => navigate("/chat")}
+          >
             Return to Chat
           </button>
         </div>
@@ -180,7 +188,7 @@ export default function MockPayment() {
         <div style={amountStyle}>₹{(orderDetails?.amount_paise / 100).toFixed(2)}</div>
         <button
           type="button"
-          className="btn-primary"
+          className="btn btn-primary"
           style={{ width: "100%", backgroundColor: "var(--success)", marginBottom: "0.75rem" }}
           onClick={() => handleWebhook("success")}
         >
@@ -188,7 +196,7 @@ export default function MockPayment() {
         </button>
         <button
           type="button"
-          className="btn-secondary"
+          className="btn btn-secondary"
           style={{ width: "100%", color: "var(--danger)", borderColor: "var(--danger)" }}
           onClick={() => handleWebhook("failed")}
         >

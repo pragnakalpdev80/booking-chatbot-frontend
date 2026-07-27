@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE = "/api/v1";
@@ -39,19 +39,19 @@ function ProviderLogin() {
   };
 
   return (
-    <div className="login-wrapper">
-      <div className="login-left">
+    <div className="auth-wrapper">
+      <div className="auth-left">
         <h1>Appointment Booking.</h1>
         <p>The modern, AI-driven scheduling platform for busy professionals.</p>
       </div>
 
-      <div className="login-right">
-        <div className="login-form-container">
+      <div className="auth-right">
+        <div className="auth-form-container">
           <h2>Welcome Back</h2>
           <p>Please enter your details to sign in.</p>
 
           {error && (
-            <div className="error-banner">
+            <div className="banner banner-error">
               <svg
                 width="20"
                 height="20"
@@ -70,15 +70,15 @@ function ProviderLogin() {
             </div>
           )}
 
-          <form
-            onSubmit={handleLogin}
-            style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
-          >
+          <form onSubmit={handleLogin}>
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username" className="form-label">
+                Username
+              </label>
               <input
                 id="username"
                 type="text"
+                className="form-input"
                 placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -87,10 +87,13 @@ function ProviderLogin() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
               <input
                 id="password"
                 type="password"
+                className="form-input"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -100,12 +103,29 @@ function ProviderLogin() {
 
             <button
               type="submit"
-              className="btn-primary"
+              className="btn btn-primary"
               style={{ width: "100%", marginTop: "0.5rem" }}
               disabled={isLoading}
             >
               {isLoading ? <span>Signing In...</span> : <span>Sign In</span>}
             </button>
+
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: "0.875rem",
+                color: "var(--text-secondary)",
+                marginTop: "1.5rem",
+              }}
+            >
+              Don't have a provider account?{" "}
+              <Link
+                to="/provider/register"
+                style={{ color: "var(--brand-primary)", textDecoration: "none", fontWeight: "600" }}
+              >
+                Register here
+              </Link>
+            </div>
           </form>
         </div>
       </div>

@@ -1,18 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link, useParams } from "react-router-dom";
 
 const API_BASE = "/api/v1";
 
 const sanitizeKey = (key) => (typeof key === "string" ? key.replace(/[^a-zA-Z0-9_-]/g, "") : "");
-const sanitizeJSON = (data) => JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+const sanitizeJSON = (data) =>
+  JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
 
 function Chatbot() {
   const navigate = useNavigate();
-  const [selectedProvider] = useState(() => sessionStorage.getItem("selectedProvider") || null);
-  const [sessionKey, setSessionKey] = useState(() => sessionStorage.getItem("sessionKey") || null);
+  const { providerSlug } = useParams();
+  const [sessionKey, setSessionKey] = useState(() => {
+    const savedSlug = sessionStorage.getItem("providerSlug");
+    if (savedSlug && savedSlug !== providerSlug) {
+      sessionStorage.removeItem("sessionKey");
+      sessionStorage.removeItem("chatMessages");
+      return null;
+    }
+    return sessionStorage.getItem("sessionKey") || null;
+  });
+
   const [messages, setMessages] = useState(() => {
+    const savedSlug = sessionStorage.getItem("providerSlug");
+    if (savedSlug && savedSlug !== providerSlug) return [];
     try {
       const saved = sessionStorage.getItem("chatMessages");
       return saved ? JSON.parse(saved) : [];
@@ -20,13 +32,13 @@ function Chatbot() {
       return [];
     }
   });
+
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
 
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -35,19 +47,31 @@ function Chatbot() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Start session on mount
   useEffect(() => {
     const startSession = async () => {
-      if (!selectedProvider) return; // Wait until provider is selected
-      if (sessionKey) return; // Do not start a new session if one is already active in sessionStorage
+      if (!providerSlug) return;
+
+      // Update saved slug
+      sessionStorage.setItem("providerSlug", providerSlug);
+
+      if (sessionKey) return;
 
       try {
+        // Resolve slug to provider_id
+        const providerRes = await fetch(`${API_BASE}/chat/provider/${providerSlug}/`);
+        if (!providerRes.ok) {
+          setError("Provider not found. Please check the URL.");
+          return;
+        }
+        const providerData = await providerRes.json();
+        const pId = providerData.data.id;
+
         const response = await fetch(`${API_BASE}/chat/sessions/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ provider_id: selectedProvider }),
+          body: JSON.stringify({ provider_id: pId }),
         });
         if (!response.ok) throw new Error("Failed to start session");
 
@@ -56,9 +80,9 @@ function Chatbot() {
         setSessionKey(newSessionKey);
         sessionStorage.setItem("sessionKey", newSessionKey);
 
-        // Use the greeting from the API (avoids a Groq round-trip for hello messages)
-        const greeting = data.data.greeting
-          || "Hello! I am your AI scheduling assistant. How can I help you today?";
+        const greeting =
+          data.data.greeting ||
+          "Hello! I am your AI scheduling assistant. How can I help you today?";
         const greetingOptions = data.data.greeting_options || [];
 
         const initialMessages = [
@@ -78,7 +102,7 @@ function Chatbot() {
     };
 
     startSession();
-  }, [selectedProvider, sessionKey]);
+  }, [providerSlug, sessionKey]);
 
   const handleSend = async (textOverride, hidden = false) => {
     const userMessage = (typeof textOverride === "string" ? textOverride : inputValue).trim();
@@ -89,7 +113,6 @@ function Chatbot() {
     }
     setError(null);
 
-    // Add user message to UI
     if (!hidden) {
       setMessages((prev) => {
         const newMsgs = [
@@ -137,7 +160,6 @@ function Chatbot() {
     } catch (err) {
       console.error(err);
       setError("An error occurred while sending the message.");
-      // Remove the typing indicator if error
       setMessages((prev) => [
         ...prev,
         {
@@ -157,46 +179,70 @@ function Chatbot() {
     }
   };
 
-  // Main render logic
   useEffect(() => {
-    if (!selectedProvider) {
+    if (!providerSlug) {
       navigate("/");
     }
-  }, [selectedProvider, navigate]);
+  }, [providerSlug, navigate]);
 
-  if (!selectedProvider) {
+  if (!providerSlug) {
     return null;
   }
 
   return (
     <div className="chat-landing-wrapper" style={{ position: "relative" }}>
       <div style={{ position: "absolute", top: "1.5rem", right: "2rem" }}>
-        <a
-          href="/provider/login"
-          className="btn-secondary"
-          style={{
-            textDecoration: "none",
-            background: "transparent",
-            borderColor: "var(--brand-primary)",
-            color: "var(--brand-primary)",
-          }}
+        <Link
+          to="/"
+          className="btn btn-secondary"
+          style={{ textDecoration: "none", marginRight: "1rem" }}
         >
+          Change Provider
+        </Link>
+        <Link to="/provider/login" className="btn btn-ghost" style={{ textDecoration: "none" }}>
           Provider Login
-        </a>
+        </Link>
       </div>
+
       <div className="chat-container">
         <div className="chat-header">
-          <div className="chat-header-avatar">
-            <img
-              src="https://ui-avatars.com/api/?name=AI&background=4F46E5&color=ffffff"
-              alt="Bot Avatar"
-            />
-            <div className="status-dot"></div>
+          <div className="chat-header-profile">
+            <div className="chat-header-avatar">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 8V4H8"></path>
+                <rect x="4" y="8" width="16" height="12" rx="2"></rect>
+                <path d="M2 14h2"></path>
+                <path d="M20 14h2"></path>
+                <path d="M15 13v2"></path>
+                <path d="M9 13v2"></path>
+              </svg>
+              <div className="status-dot"></div>
+            </div>
+            <div className="chat-header-info">
+              <h1>Booking Assistant</h1>
+              <p>Ready to schedule your appointment</p>
+            </div>
           </div>
-          <div className="chat-header-info">
-            <h1>Booking Assistant</h1>
-            <p>Ready to schedule your appointment</p>
-          </div>
+
+          <button className="icon-btn" onClick={() => navigate("/")} title="Close Chat">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
         </div>
 
         <div className="messages-area">
@@ -219,37 +265,35 @@ function Chatbot() {
           {isTyping && <TypingIndicator />}
           {error && (
             <div className="message-wrapper assistant">
-              <div
-                className="message-bubble"
-                style={{ color: "#EF4444", borderColor: "#FCA5A5", background: "#FEF2F2" }}
-              >
-                {error}
-              </div>
+              <div className="message-bubble banner banner-error">{error}</div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
         <div className="input-area">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            disabled={!sessionKey || isTyping}
-          />
-          <button
-            type="button"
-            className="send-btn"
-            onClick={handleSend}
-            disabled={!inputValue.trim() || !sessionKey || isTyping}
-            aria-label="Send message"
-          >
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-            </svg>
-          </button>
+          <div className="input-wrapper">
+            <input
+              type="text"
+              className="chat-input"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask me to book an appointment..."
+              disabled={!sessionKey || isTyping}
+            />
+            <button
+              type="button"
+              className="send-btn"
+              onClick={handleSend}
+              disabled={!inputValue.trim() || !sessionKey || isTyping}
+              aria-label="Send message"
+            >
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -92,9 +92,14 @@ const PaymentCard = ({ orderId, onReply, disabled }) => {
           <div style={{ marginTop: "1rem" }}>
             <button
               type="button"
-              className="btn-secondary"
+              className="btn btn-secondary"
               style={{ width: "100%", fontSize: "0.875rem", padding: "0.5rem" }}
-              onClick={() => onReply("I have completed the payment. The booking is already confirmed. Please just acknowledge this and ask if I need help with anything else.", true)}
+              onClick={() =>
+                onReply(
+                  "I have completed the payment. The booking is already confirmed. Please just acknowledge this and ask if I need help with anything else.",
+                  true
+                )
+              }
               disabled={disabled}
             >
               Continue
@@ -119,9 +124,11 @@ const PaymentCard = ({ orderId, onReply, disabled }) => {
           <div style={{ marginTop: "1rem" }}>
             <button
               type="button"
-              className="btn-secondary"
+              className="btn btn-secondary"
               style={{ width: "100%", fontSize: "0.875rem", padding: "0.5rem" }}
-              onClick={() => onReply(`My payment ${status}. I would like to try again or do something else.`)}
+              onClick={() =>
+                onReply(`My payment ${status}. I would like to try again or do something else.`)
+              }
               disabled={disabled}
             >
               Continue
@@ -165,7 +172,7 @@ const PaymentCard = ({ orderId, onReply, disabled }) => {
 
       <Link
         to={`/mock-pay/${orderId}`}
-        className="btn-primary"
+        className="btn btn-primary"
         style={{ width: "100%", textDecoration: "none" }}
         aria-label="Pay Now"
       >

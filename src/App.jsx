@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProviderSelector from "./components/ProviderSelector";
 import Chatbot from "./pages/Chatbot";
+import ProviderRegister from "./pages/ProviderRegister";
 import ProviderLogin from "./pages/ProviderLogin";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import Settings from "./pages/Settings";
@@ -20,8 +21,10 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<ProviderSelector />} />
-      <Route path="/chat" element={<Chatbot />} />
+      <Route path="/chat" element={<Navigate to="/" replace />} />
+      <Route path="/:providerSlug/chat" element={<Chatbot />} />
       <Route path="/mock-pay/:orderId" element={<MockPayment />} />
+      <Route path="/provider/register" element={<ProviderRegister />} />
       <Route path="/provider/login" element={<ProviderLogin />} />
       <Route
         path="/provider"

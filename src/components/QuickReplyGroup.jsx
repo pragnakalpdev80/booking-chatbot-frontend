@@ -18,9 +18,13 @@ const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled, optio
           <button
             key={opt.value}
             type="button"
-            className="chat-option-btn"
+            className="quick-reply-btn"
             disabled={disabled || clicked}
-            onClick={() => { if (disabled || clicked) return; setClicked(true); onReply(opt.value); }}
+            onClick={() => {
+              if (disabled || clicked) return;
+              setClicked(true);
+              onReply(opt.value);
+            }}
             style={{ margin: 0 }}
           >
             {opt.label}
@@ -106,18 +110,21 @@ const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled, optio
         {Object.entries(groupedSlots).map(([date, times]) => (
           <div key={date} style={{ marginBottom: "1rem" }}>
             <h4
-              style={{ color: "var(--brand-primary)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "600" }}
+              style={{
+                color: "var(--brand-primary)",
+                marginBottom: "0.5rem",
+                fontSize: "0.85rem",
+                fontWeight: "600",
+              }}
             >
               {formatHeader(date)}
             </h4>
-            <div
-              style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}
-            >
+            <div className="slot-grid">
               {times.map((timeObj, idx) => (
                 <button
                   key={`${date}-${idx}`}
                   type="button"
-                  className="chat-option-btn slot-btn"
+                  className="slot-chip"
                   disabled={disabled || clicked}
                   onClick={() => handleOptionClick(timeObj.value)}
                   style={{ margin: 0 }}
@@ -145,7 +152,7 @@ const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled, optio
         <button
           key={opt}
           type="button"
-          className="chat-option-btn"
+          className="quick-reply-btn"
           disabled={disabled || clicked}
           onClick={() => handleOptionClick(opt)}
           style={{ margin: 0 }}

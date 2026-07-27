@@ -97,25 +97,53 @@ function ProviderDashboard() {
   }
 
   if (error) {
-    return <div className="error-banner">{error}</div>;
+    return (
+      <div className="banner banner-error">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {error}
+      </div>
+    );
   }
 
   return (
     <div>
       <div className="stats-grid">
         <div
-          className="glass-card stat-card clickable animate-stagger-1"
-          style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
+          className="card stat-card"
+          style={{ cursor: "pointer", transition: "all 0.2s ease" }}
           onClick={() => navigate("/provider/all-appointments")}
         >
           <div className="stat-info">
             <h3>Total Bookings</h3>
             <div className="stat-value">{stats?.total || 0}</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--brand-primary)", marginTop: "0.5rem" }}>
-              → View all
+            <div
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--brand-primary)",
+                marginTop: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              View all →
             </div>
           </div>
-          <div className="stat-icon primary">
+          <div
+            className="stat-icon"
+            style={{ background: "var(--brand-primary-light)", color: "var(--brand-primary)" }}
+          >
             <svg
               width="24"
               height="24"
@@ -134,15 +162,15 @@ function ProviderDashboard() {
           </div>
         </div>
 
-        <div
-          className="glass-card stat-card animate-stagger-2"
-          style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
-        >
+        <div className="card stat-card">
           <div className="stat-info">
             <h3>Upcoming</h3>
             <div className="stat-value">{stats?.upcoming || 0}</div>
           </div>
-          <div className="stat-icon success">
+          <div
+            className="stat-icon"
+            style={{ background: "var(--success-bg)", color: "var(--success)" }}
+          >
             <svg
               width="24"
               height="24"
@@ -160,18 +188,28 @@ function ProviderDashboard() {
         </div>
 
         <div
-          className="glass-card stat-card clickable animate-stagger-3"
-          style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
+          className="card stat-card"
+          style={{ cursor: "pointer", transition: "all 0.2s ease" }}
           onClick={() => navigate("/provider/cancelled-appointments")}
         >
           <div className="stat-info">
             <h3>Cancelled</h3>
             <div className="stat-value">{stats?.cancelled || 0}</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--danger)", marginTop: "0.5rem" }}>
-              → View all
+            <div
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--danger)",
+                marginTop: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              View all →
             </div>
           </div>
-          <div className="stat-icon danger">
+          <div
+            className="stat-icon"
+            style={{ background: "var(--danger-bg)", color: "var(--danger)" }}
+          >
             <svg
               width="24"
               height="24"
@@ -190,7 +228,7 @@ function ProviderDashboard() {
       </div>
 
       {filterError && (
-        <div className="error-banner" style={{ marginTop: "1.5rem", marginBottom: "0" }}>
+        <div className="banner banner-error">
           <svg
             width="20"
             height="20"
@@ -200,7 +238,6 @@ function ProviderDashboard() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ flexShrink: 0 }}
           >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -210,99 +247,73 @@ function ProviderDashboard() {
         </div>
       )}
 
-      <div
-        className="glass-card animate-stagger-4"
-        style={{
-          padding: "1.5rem",
-          marginTop: filterError ? "1rem" : "2rem",
-          display: "flex",
-          gap: "1rem",
-          alignItems: "flex-end",
-          flexWrap: "wrap",
-          animation: "slideFadeUp 0.4s forwards",
-          opacity: 0,
-        }}
-      >
-        <div className="form-group" style={{ flex: 1, minWidth: "200px", margin: 0 }}>
-          <label
-            htmlFor="emailSearch"
-            style={{
-              marginBottom: "0.5rem",
-              display: "block",
-              color: "var(--text-secondary)",
-              fontSize: "0.875rem",
-            }}
-          >
-            Search by Email
-          </label>
-          <input
-            id="emailSearch"
-            type="email"
-            placeholder="client@example.com"
-            value={emailQuery}
-            onChange={(e) =>
-              setSearchParams((prev) => {
-                if (e.target.value) {
-                  prev.set("email", e.target.value);
-                } else {
-                  prev.delete("email");
-                }
-                return prev;
-              })
-            }
-          />
+      <div className="card" style={{ marginBottom: "2rem" }}>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div className="form-group" style={{ flex: 1, minWidth: "200px", margin: 0 }}>
+            <label htmlFor="emailSearch" className="form-label">
+              Search by Email
+            </label>
+            <input
+              id="emailSearch"
+              type="email"
+              className="form-input"
+              placeholder="client@example.com"
+              value={emailQuery}
+              onChange={(e) =>
+                setSearchParams((prev) => {
+                  if (e.target.value) {
+                    prev.set("email", e.target.value);
+                  } else {
+                    prev.delete("email");
+                  }
+                  return prev;
+                })
+              }
+            />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label htmlFor="startDate" className="form-label">
+              Start Date
+            </label>
+            <input
+              id="startDate"
+              type="date"
+              className="form-input"
+              min={TODAY}
+              value={startDate}
+              onChange={handleStartDateChange}
+            />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label htmlFor="endDate" className="form-label">
+              End Date
+            </label>
+            <input
+              id="endDate"
+              type="date"
+              className="form-input"
+              value={endDate}
+              onChange={handleEndDateChange}
+            />
+          </div>
+          <button type="button" className="btn btn-secondary" onClick={clearFilters}>
+            Clear
+          </button>
         </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label
-            htmlFor="startDate"
-            style={{
-              marginBottom: "0.5rem",
-              display: "block",
-              color: "var(--text-secondary)",
-              fontSize: "0.875rem",
-            }}
-          >
-            Start Date
-          </label>
-          <input id="startDate" type="date" min={TODAY} value={startDate} onChange={handleStartDateChange} />
-        </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label
-            htmlFor="endDate"
-            style={{
-              marginBottom: "0.5rem",
-              display: "block",
-              color: "var(--text-secondary)",
-              fontSize: "0.875rem",
-            }}
-          >
-            End Date
-          </label>
-          <input id="endDate" type="date" value={endDate} onChange={handleEndDateChange} />
-        </div>
-        <button type="button" className="btn-secondary" onClick={clearFilters}>
-          Clear
-        </button>
       </div>
 
-      <div
-        className="glass-card animate-stagger-5"
-        style={{
-          padding: "1.5rem",
-          marginTop: "1rem",
-          animation: "slideFadeUp 0.4s forwards",
-          opacity: 0,
-        }}
-      >
-        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>Upcoming Appointments</h2>
-        <div className="table-container">
+      <div className="table-card">
+        <div className="table-header">
+          <h2 style={{ fontSize: "1.125rem" }}>Upcoming Appointments</h2>
+        </div>
+        <div className="table-responsive">
           <table className="data-table">
             <thead>
               <tr>
                 <th>Client Email</th>
-                <th>Start Time</th>
-                <th>End Time</th>
+                <th>Date & Time</th>
                 <th>Reason</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -310,17 +321,57 @@ function ProviderDashboard() {
                 appointments.map((appt) => (
                   <tr key={appt.id}>
                     <td>
-                      <strong>{appt.email}</strong>
+                      <div style={{ fontWeight: "500", color: "var(--text-main)" }}>
+                        {appt.email}
+                      </div>
                     </td>
-                    <td>{new Date(appt.start_time).toLocaleString()}</td>
-                    <td>{new Date(appt.end_time).toLocaleTimeString()}</td>
+                    <td>
+                      <div style={{ fontWeight: "500" }}>
+                        {new Date(appt.start_time).toLocaleDateString(undefined, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        {new Date(appt.start_time).toLocaleTimeString(undefined, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        -{" "}
+                        {new Date(appt.end_time).toLocaleTimeString(undefined, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </td>
                     <td>{appt.reason || "N/A"}</td>
+                    <td>
+                      <span className="badge badge-success">Upcoming</span>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: "center", color: "var(--text-secondary)" }}>
-                    No appointments found.
+                  <td colSpan="4">
+                    <div className="empty-state">
+                      <svg
+                        width="48"
+                        height="48"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                      <h3>No Upcoming Appointments</h3>
+                      <p>There are no upcoming appointments matching your criteria.</p>
+                    </div>
                   </td>
                 </tr>
               )}

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import Chatbot from "../pages/Chatbot";
 
 test("renders and interacts with Chatbot", async () => {
@@ -8,12 +8,21 @@ test("renders and interacts with Chatbot", async () => {
   window.HTMLElement.prototype.scrollIntoView = function () {};
 
   global.fetch = vi.fn((url) => {
+    if (url.includes("/chat/provider/")) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            data: { id: 1, name: "Dr. Mock", slug: "dr-mock", specialty: "Tests" },
+          }),
+      });
+    }
     if (url.includes("/providers/")) {
       return Promise.resolve({
         ok: true,
         json: () =>
           Promise.resolve({
-            data: [{ id: 1, name: "Dr. Mock", specialty: "Tests" }],
+            data: [{ id: 1, name: "Dr. Mock", slug: "dr-mock", specialty: "Tests" }],
           }),
       });
     }
@@ -29,13 +38,13 @@ test("renders and interacts with Chatbot", async () => {
     });
   });
 
-  sessionStorage.setItem("selectedProvider", "1");
-
   await act(async () => {
     render(
-      <BrowserRouter>
-        <Chatbot />
-      </BrowserRouter>
+      <MemoryRouter initialEntries={["/dr-mock/chat"]}>
+        <Routes>
+          <Route path="/:providerSlug/chat" element={<Chatbot />} />
+        </Routes>
+      </MemoryRouter>
     );
   });
 
@@ -43,7 +52,7 @@ test("renders and interacts with Chatbot", async () => {
   expect(await screen.findByText(/Booking Assistant/i)).toBeInTheDocument();
 
   // Test input
-  const input = screen.getByPlaceholderText(/Type your message.../i);
+  const input = screen.getByPlaceholderText(/Ask me to book an appointment/i);
   fireEvent.change(input, { target: { value: "Hello" } });
 
   // Test sending message
