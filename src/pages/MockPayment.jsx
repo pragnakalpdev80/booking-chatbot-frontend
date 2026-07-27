@@ -90,45 +90,7 @@ export default function MockPayment() {
     marginBottom: "2rem",
   };
 
-  const btnPrimary = {
-    width: "100%",
-    padding: "0.875rem 1.5rem",
-    backgroundColor: "var(--success)",
-    color: "var(--text-inverse)",
-    fontWeight: "600",
-    fontSize: "1rem",
-    borderRadius: "var(--radius-md)",
-    border: "none",
-    cursor: "pointer",
-    marginBottom: "0.75rem",
-    transition: "var(--transition-fast)",
-  };
 
-  const btnSecondary = {
-    width: "100%",
-    padding: "0.875rem 1.5rem",
-    backgroundColor: "transparent",
-    color: "var(--danger)",
-    fontWeight: "600",
-    fontSize: "1rem",
-    borderRadius: "var(--radius-md)",
-    border: "1px solid var(--danger)",
-    cursor: "pointer",
-    transition: "var(--transition-fast)",
-  };
-
-  const btnReturn = {
-    width: "100%",
-    padding: "0.875rem 1.5rem",
-    backgroundColor: "var(--brand-primary)",
-    color: "var(--text-inverse)",
-    fontWeight: "600",
-    fontSize: "1rem",
-    borderRadius: "var(--radius-md)",
-    border: "none",
-    cursor: "pointer",
-    marginTop: "1.5rem",
-  };
 
   const renderContent = () => {
     if (stage === "loading" || stage === "processing") {
@@ -177,7 +139,7 @@ export default function MockPayment() {
           </div>
           <h2 style={titleStyle}>Payment Successful!</h2>
           <p style={textStyle}>Your booking has been confirmed. You can now return to the chat.</p>
-          <button style={btnReturn} onClick={() => navigate("/chat")}>
+          <button type="button" className="btn-primary" style={{ width: "100%", marginTop: "1.5rem" }} onClick={() => navigate("/chat")}>
             Return to Chat
           </button>
         </div>
@@ -203,7 +165,7 @@ export default function MockPayment() {
           </div>
           <h2 style={titleStyle}>Payment Failed</h2>
           <p style={textStyle}>Unfortunately, your payment could not be processed.</p>
-          <button style={btnReturn} onClick={() => navigate("/chat")}>
+          <button type="button" className="btn-primary" style={{ width: "100%", marginTop: "1.5rem" }} onClick={() => navigate("/chat")}>
             Return to Chat
           </button>
         </div>
@@ -217,24 +179,18 @@ export default function MockPayment() {
         <p style={textStyle}>Amount to Pay</p>
         <div style={amountStyle}>₹{(orderDetails?.amount_paise / 100).toFixed(2)}</div>
         <button
-          style={btnPrimary}
+          type="button"
+          className="btn-primary"
+          style={{ width: "100%", backgroundColor: "var(--success)", marginBottom: "0.75rem" }}
           onClick={() => handleWebhook("success")}
-          onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
-          onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
         >
           Confirm Payment
         </button>
         <button
-          style={btnSecondary}
+          type="button"
+          className="btn-secondary"
+          style={{ width: "100%", color: "var(--danger)", borderColor: "var(--danger)" }}
           onClick={() => handleWebhook("failed")}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--danger)";
-            e.currentTarget.style.color = "var(--text-inverse)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = "var(--danger)";
-          }}
         >
           Cancel
         </button>

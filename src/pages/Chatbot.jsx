@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE = "/api/v1";
 
+const sanitizeKey = (key) => (typeof key === "string" ? key.replace(/[^a-zA-Z0-9_-]/g, "") : "");
+const sanitizeJSON = (data) => JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+
 function Chatbot() {
   const navigate = useNavigate();
   const [selectedProvider] = useState(() => sessionStorage.getItem("selectedProvider") || null);
@@ -49,20 +52,25 @@ function Chatbot() {
         if (!response.ok) throw new Error("Failed to start session");
 
         const data = await response.json();
-        const newSessionKey = data.data.session_key;
+        const newSessionKey = sanitizeKey(data.data.session_key);
         setSessionKey(newSessionKey);
         sessionStorage.setItem("sessionKey", newSessionKey);
 
-        // Initial greeting
+        // Use the greeting from the API (avoids a Groq round-trip for hello messages)
+        const greeting = data.data.greeting
+          || "Hello! I am your AI scheduling assistant. How can I help you today?";
+        const greetingOptions = data.data.greeting_options || [];
+
         const initialMessages = [
           {
             id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
             role: "assistant",
-            content: "Hello! I am your AI scheduling assistant. How can I help you today?",
+            content: greeting,
+            options: greetingOptions,
           },
         ];
         setMessages(initialMessages);
-        sessionStorage.setItem("chatMessages", JSON.stringify(initialMessages));
+        sessionStorage.setItem("chatMessages", sanitizeJSON(initialMessages));
       } catch (err) {
         console.error(err);
         setError("Could not connect to the server. Is Django running?");
@@ -72,7 +80,7 @@ function Chatbot() {
     startSession();
   }, [selectedProvider, sessionKey]);
 
-  const handleSend = async (textOverride) => {
+  const handleSend = async (textOverride, hidden = false) => {
     const userMessage = (typeof textOverride === "string" ? textOverride : inputValue).trim();
     if (!userMessage || !sessionKey || isTyping) return;
 
@@ -82,18 +90,20 @@ function Chatbot() {
     setError(null);
 
     // Add user message to UI
-    setMessages((prev) => {
-      const newMsgs = [
-        ...prev,
-        {
-          id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
-          role: "user",
-          content: userMessage,
-        },
-      ];
-      sessionStorage.setItem("chatMessages", JSON.stringify(newMsgs));
-      return newMsgs;
-    });
+    if (!hidden) {
+      setMessages((prev) => {
+        const newMsgs = [
+          ...prev,
+          {
+            id: crypto.randomUUID ? crypto.randomUUID() : Date.now(),
+            role: "user",
+            content: userMessage,
+          },
+        ];
+        sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs));
+        return newMsgs;
+      });
+    }
     setIsTyping(true);
 
     try {
@@ -121,7 +131,7 @@ function Chatbot() {
             content: data.data.response,
           },
         ];
-        sessionStorage.setItem("chatMessages", JSON.stringify(newMsgs));
+        sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs));
         return newMsgs;
       });
     } catch (err) {
@@ -198,6 +208,7 @@ function Chatbot() {
                 <ChatMessage
                   role={msg.role}
                   content={msg.content}
+                  options={msg.options}
                   onReply={handleSend}
                   disabled={!isLastAssistantMessage || isTyping}
                   isTyping={isTyping}

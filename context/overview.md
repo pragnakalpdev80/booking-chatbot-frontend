@@ -17,7 +17,10 @@ The UI is divided primarily between a client-facing Chatbot and an Admin portal.
 - **`src/pages/Chatbot.jsx`:** The core conversational UI for users. Initializes a chat session and handles message history.
 - **`src/components/ChatMessage.jsx`:** Renders individual messages. Handles raw markdown output from the LLM via `react-markdown`.
 - **`src/components/QuickReplyGroup.jsx`:** Detects interactive elements like boolean choices or time ranges (e.g. `10:00 AM – 10:30 AM`) and renders them as clickable, self-disabling buttons.
-- **`src/pages/AdminDashboard.jsx` & `src/pages/AdminLogin.jsx`:** Authentication and dashboard views for providers to manage settings and link Google Calendar.
+- **`src/pages/ProviderDashboard.jsx` & `src/pages/ProviderLogin.jsx`:** Authentication and dashboard views for providers to manage settings and link Google Calendar. The Dashboard features strict date validations (e.g. `min={today}`) to prevent querying historical appointments for "Upcoming" views.
+- **`src/pages/Settings.jsx`:** The provider configuration page. Implements **Section-by-Section Saving**:
+  - General Settings, Weekly Schedule, Break Times, and Holidays are independently saved via separate REST calls (PATCH and PUT methods) to localize error handling and prevent accidental state overwrites.
+  - Break time dropdowns dynamically filter to only allow selection of currently `active` working days from the local schedule state.
 
 ## State Management
 

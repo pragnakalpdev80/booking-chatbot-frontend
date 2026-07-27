@@ -8,6 +8,8 @@ import ProviderDashboard from "./pages/ProviderDashboard";
 import Settings from "./pages/Settings";
 import MockPayment from "./pages/MockPayment";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
+import AllAppointments from "./pages/AllAppointments";
+import CancelledAppointments from "./pages/CancelledAppointments";
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -30,6 +32,8 @@ function AppRoutes() {
         }
       >
         <Route path="dashboard" element={<ProviderDashboard />} />
+        <Route path="all-appointments" element={<AllAppointments />} />
+        <Route path="cancelled-appointments" element={<CancelledAppointments />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>

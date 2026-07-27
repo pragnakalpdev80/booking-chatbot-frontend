@@ -695,12 +695,12 @@ h6 {
   margin-left: 1.25rem;
   margin-bottom: 0.5rem;
 }
-.message-bubble a {
+.message-bubble a:not(.btn-primary):not(.btn-secondary) {
   color: var(--brand-primary);
   text-decoration: underline;
   font-weight: 500;
 }
-.message-wrapper.user .message-bubble a {
+.message-wrapper.user .message-bubble a:not(.btn-primary):not(.btn-secondary) {
   color: white;
 }
 
@@ -786,3 +786,84 @@ h6 {
     opacity: 1;
   }
 }
+
+.provider-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.provider-btn:hover, .provider-btn:focus {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-md);
+  outline: none;
+}
+
+/* Stat Card Enhancements */
+.stat-card.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card.clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Pagination UI */
+.pagination {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border-radius: 0.375rem;
+  background: white;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled):not(.ellipsis) {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.pagination-btn.active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: white;
+}
+
+.pagination-btn.ellipsis {
+  cursor: default;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--surface-bg);
+}
+

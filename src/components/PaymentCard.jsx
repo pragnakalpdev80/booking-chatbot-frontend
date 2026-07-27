@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 
 const API_BASE = "/api/v1";
 
-const TERMINAL_STATES = ["paid", "failed", "expired"];
+const TERMINAL_STATES = new Set(["paid", "failed", "expired"]);
 
-const PaymentCard = ({ orderId }) => {
+const PaymentCard = ({ orderId, onReply, disabled }) => {
   const [status, setStatus] = useState("created");
   const [amount, setAmount] = useState(0);
   const [booking, setBooking] = useState(null);
@@ -23,7 +23,7 @@ const PaymentCard = ({ orderId }) => {
         if (data.booking) setBooking(data.booking);
 
         // Stop polling once we reach a terminal state
-        if (TERMINAL_STATES.includes(data.status) && intervalRef.current) {
+        if (TERMINAL_STATES.has(data.status) && intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
@@ -40,11 +40,7 @@ const PaymentCard = ({ orderId }) => {
   }, [orderId]);
 
   const cardStyle = {
-    border: "1px solid var(--border-light)",
-    borderRadius: "var(--radius-lg)",
     padding: "1rem",
-    backgroundColor: "var(--bg-surface)",
-    boxShadow: "var(--shadow-sm)",
     marginTop: "0.5rem",
     marginBottom: "0.5rem",
   };
@@ -68,7 +64,7 @@ const PaymentCard = ({ orderId }) => {
   // ── PAID ─────────────────────────────────────────────────────────────────────
   if (status === "paid") {
     return (
-      <div style={{ ...cardStyle, borderColor: "rgba(16, 185, 129, 0.4)" }}>
+      <div className="card" style={{ ...cardStyle, borderColor: "rgba(16, 185, 129, 0.4)" }}>
         <div
           style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}
         >
@@ -92,6 +88,19 @@ const PaymentCard = ({ orderId }) => {
             )}
           </div>
         )}
+        {onReply && (
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: "100%", fontSize: "0.875rem", padding: "0.5rem" }}
+              onClick={() => onReply("I have completed the payment. The booking is already confirmed. Please just acknowledge this and ask if I need help with anything else.", true)}
+              disabled={disabled}
+            >
+              Continue
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -99,20 +108,33 @@ const PaymentCard = ({ orderId }) => {
   // ── FAILED / EXPIRED ──────────────────────────────────────────────────────────
   if (status === "failed" || status === "expired") {
     return (
-      <div style={{ ...cardStyle, borderColor: "rgba(239, 68, 68, 0.4)" }}>
+      <div className="card" style={{ ...cardStyle, borderColor: "rgba(239, 68, 68, 0.4)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span style={{ fontSize: "1.5rem" }}>❌</span>
           <span style={{ fontWeight: "600", color: "var(--danger)", fontSize: "0.95rem" }}>
             Payment {status === "failed" ? "Failed" : "Expired"}. Please try booking again.
           </span>
         </div>
+        {onReply && (
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: "100%", fontSize: "0.875rem", padding: "0.5rem" }}
+              onClick={() => onReply(`My payment ${status}. I would like to try again or do something else.`)}
+              disabled={disabled}
+            >
+              Continue
+            </button>
+          </div>
+        )}
       </div>
     );
   }
 
   // ── CREATED (awaiting payment) ────────────────────────────────────────────────
   return (
-    <div style={cardStyle}>
+    <div className="card" style={cardStyle}>
       <h4
         style={{
           fontWeight: "600",
@@ -143,20 +165,8 @@ const PaymentCard = ({ orderId }) => {
 
       <Link
         to={`/mock-pay/${orderId}`}
-        style={{
-          display: "block",
-          width: "100%",
-          textAlign: "center",
-          backgroundColor: "var(--brand-primary)",
-          color: "var(--text-inverse)",
-          fontWeight: "600",
-          padding: "0.5rem 1rem",
-          borderRadius: "var(--radius-md)",
-          textDecoration: "none",
-          transition: "var(--transition-fast)",
-        }}
-        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "var(--brand-primary-hover)")}
-        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "var(--brand-primary)")}
+        className="btn-primary"
+        style={{ width: "100%", textDecoration: "none" }}
         aria-label="Pay Now"
       >
         Pay Now

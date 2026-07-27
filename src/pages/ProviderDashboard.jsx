@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE = "/api/v1";
+const TODAY = new Date().toISOString().split("T")[0];
 
 function ProviderDashboard() {
   const [stats, setStats] = useState(null);
@@ -12,6 +13,7 @@ function ProviderDashboard() {
   const [filterError, setFilterError] = useState("");
   const { token } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const startDate = searchParams.get("start_date") || "";
   const endDate = searchParams.get("end_date") || "";
@@ -102,12 +104,16 @@ function ProviderDashboard() {
     <div>
       <div className="stats-grid">
         <div
-          className="glass-card stat-card animate-stagger-1"
+          className="glass-card stat-card clickable animate-stagger-1"
           style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
+          onClick={() => navigate("/provider/all-appointments")}
         >
           <div className="stat-info">
             <h3>Total Bookings</h3>
             <div className="stat-value">{stats?.total || 0}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--brand-primary)", marginTop: "0.5rem" }}>
+              → View all
+            </div>
           </div>
           <div className="stat-icon primary">
             <svg
@@ -154,12 +160,16 @@ function ProviderDashboard() {
         </div>
 
         <div
-          className="glass-card stat-card animate-stagger-3"
+          className="glass-card stat-card clickable animate-stagger-3"
           style={{ animation: "slideFadeUp 0.4s forwards", opacity: 0 }}
+          onClick={() => navigate("/provider/cancelled-appointments")}
         >
           <div className="stat-info">
             <h3>Cancelled</h3>
             <div className="stat-value">{stats?.cancelled || 0}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--danger)", marginTop: "0.5rem" }}>
+              → View all
+            </div>
           </div>
           <div className="stat-icon danger">
             <svg
@@ -215,6 +225,7 @@ function ProviderDashboard() {
       >
         <div className="form-group" style={{ flex: 1, minWidth: "200px", margin: 0 }}>
           <label
+            htmlFor="emailSearch"
             style={{
               marginBottom: "0.5rem",
               display: "block",
@@ -225,6 +236,7 @@ function ProviderDashboard() {
             Search by Email
           </label>
           <input
+            id="emailSearch"
             type="email"
             placeholder="client@example.com"
             value={emailQuery}
@@ -242,6 +254,7 @@ function ProviderDashboard() {
         </div>
         <div className="form-group" style={{ margin: 0 }}>
           <label
+            htmlFor="startDate"
             style={{
               marginBottom: "0.5rem",
               display: "block",
@@ -251,10 +264,11 @@ function ProviderDashboard() {
           >
             Start Date
           </label>
-          <input type="date" value={startDate} onChange={handleStartDateChange} />
+          <input id="startDate" type="date" min={TODAY} value={startDate} onChange={handleStartDateChange} />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
           <label
+            htmlFor="endDate"
             style={{
               marginBottom: "0.5rem",
               display: "block",
@@ -264,9 +278,9 @@ function ProviderDashboard() {
           >
             End Date
           </label>
-          <input type="date" value={endDate} onChange={handleEndDateChange} />
+          <input id="endDate" type="date" value={endDate} onChange={handleEndDateChange} />
         </div>
-        <button className="btn-secondary" onClick={clearFilters}>
+        <button type="button" className="btn-secondary" onClick={clearFilters}>
           Clear
         </button>
       </div>
@@ -280,7 +294,7 @@ function ProviderDashboard() {
           opacity: 0,
         }}
       >
-        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>Confirmed Appointments</h2>
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>Upcoming Appointments</h2>
         <div className="table-container">
           <table className="data-table">
             <thead>

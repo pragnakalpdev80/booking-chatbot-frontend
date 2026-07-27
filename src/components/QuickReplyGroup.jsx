@@ -1,11 +1,34 @@
 import React, { useState } from "react";
 
-const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled }) => {
+const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled, options }) => {
   const [clicked, setClicked] = useState(false);
 
   // Suppress ALL quick replies once the payment card has been triggered.
   // The [PAY: tag signals payment is in progress — no other user action is needed.
-  if (messageContent && messageContent.includes("[PAY:")) return null;
+  if (messageContent?.includes("[PAY:")) return null;
+
+  // If explicit options are passed (e.g. initial greeting), render them directly.
+  if (options && options.length > 0) {
+    return (
+      <div
+        className="quick-reply-group"
+        style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}
+      >
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            className="chat-option-btn"
+            disabled={disabled || clicked}
+            onClick={() => { if (disabled || clicked) return; setClicked(true); onReply(opt.value); }}
+            style={{ margin: 0 }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   // Fallback intents if no slots are present
   const getFallbackOptions = () => {
@@ -19,13 +42,16 @@ const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled }) => 
       options.add("Yes");
       options.add("No");
     } else if (
-      normalized.includes("cancel") &&
-      normalized.includes("reschedule") &&
-      normalized.includes("book")
+      (normalized.includes("cancel") &&
+        normalized.includes("reschedule") &&
+        normalized.includes("book")) ||
+      // Initial greeting pattern: asking about what user would like to do
+      (normalized.includes("what would you like") &&
+        (normalized.includes("book") || normalized.includes("schedule")))
     ) {
-      options.add("Book");
-      options.add("Reschedule");
-      options.add("Cancel");
+      options.add("📅 Book an appointment");
+      options.add("🔄 Reschedule an appointment");
+      options.add("❌ Cancel an appointment");
     } else if (
       normalized.includes("reason") &&
       !normalized.includes("payment") &&
@@ -64,7 +90,7 @@ const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled }) => 
     const formatHeader = (dateStr) => {
       try {
         const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
+        if (Number.isNaN(d.getTime())) return dateStr;
         return d.toLocaleDateString(undefined, {
           weekday: "short",
           month: "short",
@@ -76,17 +102,15 @@ const QuickReplyGroup = ({ messageContent, parsedSlots, onReply, disabled }) => 
     };
 
     return (
-      <div className="quick-reply-slots mt-3">
+      <div className="quick-reply-slots" style={{ marginTop: "1rem" }}>
         {Object.entries(groupedSlots).map(([date, times]) => (
-          <div key={date} className="mb-3">
+          <div key={date} style={{ marginBottom: "1rem" }}>
             <h4
-              className="text-sm font-semibold mb-2"
-              style={{ color: "var(--brand-primary)", marginBottom: "0.5rem", fontSize: "0.85rem" }}
+              style={{ color: "var(--brand-primary)", marginBottom: "0.5rem", fontSize: "0.85rem", fontWeight: "600" }}
             >
               {formatHeader(date)}
             </h4>
             <div
-              className="flex flex-wrap gap-2"
               style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}
             >
               {times.map((timeObj, idx) => (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const API_BASE = "/api/v1";
 
@@ -34,13 +34,10 @@ export default function ProviderSelector() {
     minHeight: "100vh",
     backgroundColor: "var(--bg-app)",
     padding: "2rem",
+    position: "relative",
   };
 
   const cardStyle = {
-    background: "var(--bg-surface)",
-    padding: "2rem",
-    borderRadius: "var(--radius-xl)",
-    boxShadow: "var(--shadow-lg)",
     width: "100%",
     maxWidth: "400px",
     textAlign: "center",
@@ -59,20 +56,7 @@ export default function ProviderSelector() {
     fontSize: "1rem",
   };
 
-  const providerButtonStyle = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    padding: "1rem 1.25rem",
-    marginBottom: "1rem",
-    backgroundColor: "var(--bg-surface)",
-    border: "1px solid var(--border-light)",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    transition: "var(--transition-fast)",
-    boxShadow: "var(--shadow-sm)",
-  };
+
 
   const avatarStyle = {
     display: "flex",
@@ -91,7 +75,7 @@ export default function ProviderSelector() {
   if (loading) {
     return (
       <div style={containerStyle}>
-        <div style={cardStyle}>
+        <div className="card" style={cardStyle}>
           <p style={{ color: "var(--text-secondary)" }}>Loading available doctors...</p>
         </div>
       </div>
@@ -101,7 +85,7 @@ export default function ProviderSelector() {
   if (error) {
     return (
       <div style={containerStyle}>
-        <div style={cardStyle}>
+        <div className="card" style={cardStyle}>
           <p style={{ color: "var(--danger)", fontWeight: "500" }}>{error}</p>
         </div>
       </div>
@@ -110,7 +94,16 @@ export default function ProviderSelector() {
 
   return (
     <div style={containerStyle}>
-      <div style={cardStyle}>
+      <div style={{ position: "absolute", top: "1.5rem", right: "2rem" }}>
+        <Link
+          to="/provider/login"
+          className="btn-secondary"
+          style={{ textDecoration: "none" }}
+        >
+          Provider Login
+        </Link>
+      </div>
+      <div className="card" style={cardStyle}>
         <h1 style={titleStyle}>Appointment Booking System</h1>
         <p style={subtitleStyle}>Select a provider to start scheduling your visit.</p>
 
@@ -121,18 +114,11 @@ export default function ProviderSelector() {
             providers.map((provider) => (
               <button
                 key={provider.id}
+                type="button"
+                className="provider-btn"
                 onClick={() => {
                   sessionStorage.setItem("selectedProvider", provider.id);
                   navigate("/chat");
-                }}
-                style={providerButtonStyle}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.borderColor = "var(--brand-primary)";
-                  e.currentTarget.style.boxShadow = "var(--shadow-md)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.borderColor = "var(--border-light)";
-                  e.currentTarget.style.boxShadow = "var(--shadow-sm)";
                 }}
                 aria-label={`Select ${provider.name}`}
               >
