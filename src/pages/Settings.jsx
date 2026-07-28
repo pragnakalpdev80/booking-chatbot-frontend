@@ -9,6 +9,8 @@ const TODAY = new Date().toISOString().split("T")[0];
 
 function Settings() {
   const [settings, setSettings] = useState(null);
+  const [originalSettings, setOriginalSettings] = useState(null);
+  const [calendars, setCalendars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -30,6 +32,7 @@ function Settings() {
         if (!res.ok) throw new Error("Failed to fetch settings");
         const data = await res.json();
         setSettings(data.data);
+        setOriginalSettings(data.data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -39,6 +42,16 @@ function Settings() {
 
     if (token) fetchSettings();
   }, [token]);
+
+  useEffect(() => {
+    if (!token || !settings?.is_google_connected) return;
+    fetch(`${API_BASE}/admin/my-calendars/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setCalendars(data.data ?? []))
+      .catch(() => {}); // non-critical, silently ignore
+  }, [token, settings?.is_google_connected]);
 
   const showSuccess = (msg) => {
     setSuccess(msg);
@@ -56,10 +69,18 @@ function Settings() {
           provider_name: settings.provider_name,
           timezone: settings.timezone,
           slot_duration: settings.slot_duration,
+          calendar_id: settings.calendar_id,
         }),
       });
       if (!res.ok) throw new Error("Failed to save general settings");
       showSuccess("General settings saved successfully.");
+      setOriginalSettings((prev) => ({
+        ...prev,
+        provider_name: settings.provider_name,
+        timezone: settings.timezone,
+        slot_duration: settings.slot_duration,
+        calendar_id: settings.calendar_id,
+      }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -78,6 +99,10 @@ function Settings() {
       });
       if (!res.ok) throw new Error("Failed to save schedule");
       showSuccess("Weekly schedule saved successfully.");
+      setOriginalSettings((prev) => ({
+        ...prev,
+        day_schedules: settings.day_schedules,
+      }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -96,6 +121,10 @@ function Settings() {
       });
       if (!res.ok) throw new Error("Failed to save break times");
       showSuccess("Break times saved successfully.");
+      setOriginalSettings((prev) => ({
+        ...prev,
+        break_times: settings.break_times,
+      }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -114,6 +143,10 @@ function Settings() {
       });
       if (!res.ok) throw new Error("Failed to save holidays");
       showSuccess("Holidays saved successfully.");
+      setOriginalSettings((prev) => ({
+        ...prev,
+        holidays: settings.holidays,
+      }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -132,6 +165,11 @@ function Settings() {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const hasUnsavedChanges = () => {
+    if (!settings || !originalSettings) return false;
+    return JSON.stringify(settings) !== JSON.stringify(originalSettings);
   };
 
   const updateDaySchedule = (dayIndex, field, value) => {
@@ -281,6 +319,41 @@ function Settings() {
           {settings?.is_google_connected ? "Calendar Connected" : "Connect Google Calendar"}
         </button>
       </div>
+
+      {hasUnsavedChanges() && (
+        <div
+          className="banner"
+          style={{
+            backgroundColor: "#fff3cd",
+            color: "#856404",
+            border: "1px solid #ffeeba",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            marginBottom: "1rem",
+            borderRadius: "var(--radius-md)",
+            padding: "1rem",
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            style={{ flexShrink: 0 }}
+          >
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div>
+            <strong>You have unsaved changes!</strong> Please click &quot;Save&quot; in the relevant
+            tab below to apply them.
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="banner banner-error">
@@ -443,6 +516,32 @@ function Settings() {
                   value={settings?.timezone || ""}
                   onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="calendarId" className="form-label">
+                  Booking Calendar
+                </label>
+                {calendars.length > 0 ? (
+                  <select
+                    id="calendarId"
+                    className="form-select"
+                    value={settings?.calendar_id || "primary"}
+                    onChange={(e) => setSettings({ ...settings, calendar_id: e.target.value })}
+                  >
+                    {calendars.map((cal) => (
+                      <option key={cal.id} value={cal.id}>
+                        {cal.summary}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p style={{ color: "var(--text-tertiary)", fontSize: "0.875rem" }}>
+                    {settings?.is_google_connected
+                      ? "Loading calendars..."
+                      : "Connect Google Calendar above to choose a calendar."}
+                  </p>
+                )}
               </div>
 
               <div className="form-group" style={{ marginTop: "1rem" }}>
