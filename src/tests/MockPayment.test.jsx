@@ -129,4 +129,14 @@ describe("MockPayment Component", () => {
     expect(body.order_id).toBe("ord_123");
     expect(body.reason).toBe("User cancelled payment");
   });
+
+  it("handles fetch order error gracefully", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Network Error"));
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Payment Failed/i)).toBeInTheDocument();
+    });
+  });
 });

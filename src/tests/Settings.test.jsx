@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import Settings from "../pages/Settings";
 import { AuthProvider } from "../context/AuthContext";
 import { vi, describe, it, expect, beforeEach } from "vitest";
@@ -183,7 +183,7 @@ describe("Settings Component", () => {
       }
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Save Breaks" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Break Times" }));
 
     await waitFor(() => {
       const putCall = global.fetch.mock.calls.find((call) => call[1] && call[1].method === "PUT");
@@ -196,7 +196,7 @@ describe("Settings Component", () => {
     const removeBtns = screen.getAllByTitle("Remove Break");
     fireEvent.click(removeBtns[0]); // Remove the first break
 
-    fireEvent.click(screen.getByRole("button", { name: "Save Breaks" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Break Times" }));
     await waitFor(() => {
       const putCalls = global.fetch.mock.calls.filter(
         (call) => call[1] && call[1].method === "PUT"
@@ -263,6 +263,56 @@ describe("Settings Component", () => {
     // Wait for the button state to reset
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Save" })).not.toBeDisabled();
+    });
+  });
+
+  it("handles fetch error during initial load gracefully", async () => {
+    global.fetch.mockImplementationOnce(() => Promise.reject(new Error("Network Failure")));
+    render(
+      <AuthProvider>
+        <MemoryRouter>
+          <Settings />
+        </MemoryRouter>
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Network Failure/i)).toBeInTheDocument();
+    });
+  });
+
+  it("handles Connect Google Calendar button click", async () => {
+    // Override the GET settings fetch to return is_google_connected: false
+    global.fetch.mockImplementation((url) => {
+      if (url === "/api/v1/calendar/login/") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ url: "https://accounts.google.com/o/oauth2/auth" }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            data: {
+              is_google_connected: false,
+              day_schedules: {},
+              break_times: [],
+              holidays: [],
+            },
+          }),
+      });
+    });
+
+    await renderComponent();
+
+    const connectBtn = screen.getByRole("button", { name: /Connect Google Calendar/i });
+    fireEvent.click(connectBtn);
+
+    await waitFor(() => {
+      const fetchCalls = global.fetch.mock.calls;
+      const connectCall = fetchCalls.find((call) => call[0] === "/api/v1/calendar/login/");
+      expect(connectCall).toBeTruthy();
     });
   });
 });

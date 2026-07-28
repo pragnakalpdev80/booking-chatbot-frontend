@@ -7,7 +7,9 @@ const API_BASE = "/api/v1";
 
 const sanitizeKey = (key) => (typeof key === "string" ? key.replace(/[^a-zA-Z0-9_-]/g, "") : "");
 const sanitizeJSON = (data) =>
-  JSON.stringify(data).replaceAll("<", "\\u003c").replaceAll(">", "\\u003e");
+  JSON.stringify(data)
+    .replaceAll("<", String.raw`\u003c`)
+    .replaceAll(">", String.raw`\u003e`);
 
 function Chatbot() {
   const navigate = useNavigate();
@@ -78,9 +80,7 @@ function Chatbot() {
         const data = await response.json();
         const newSessionKey = sanitizeKey(data.data.session_key);
         setSessionKey(newSessionKey);
-        // eslint-disable-next-line
-        // oxlint-disable-next-line
-        sessionStorage.setItem("sessionKey", newSessionKey);
+        sessionStorage.setItem("sessionKey", newSessionKey); // NOSONAR
 
         const greeting =
           data.data.greeting ||
@@ -96,9 +96,7 @@ function Chatbot() {
           },
         ];
         setMessages(initialMessages);
-        // eslint-disable-next-line
-        // oxlint-disable-next-line
-        sessionStorage.setItem("chatMessages", sanitizeJSON(initialMessages));
+        sessionStorage.setItem("chatMessages", sanitizeJSON(initialMessages)); // NOSONAR
       } catch (err) {
         console.error(err);
         setError("Could not connect to the server. Is Django running?");
@@ -127,9 +125,7 @@ function Chatbot() {
             content: userMessage,
           },
         ];
-        // eslint-disable-next-line
-        // oxlint-disable-next-line
-        sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs));
+        sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs)); // NOSONAR
         return newMsgs;
       });
     }
@@ -160,9 +156,7 @@ function Chatbot() {
             content: data.data.response,
           },
         ];
-        // eslint-disable-next-line
-        // oxlint-disable-next-line
-        sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs));
+        sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs)); // NOSONAR
         return newMsgs;
       });
     } catch (err) {

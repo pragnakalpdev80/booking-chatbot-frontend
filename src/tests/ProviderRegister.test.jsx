@@ -30,7 +30,7 @@ describe("ProviderRegister", () => {
 
   it("renders the registration form", () => {
     renderComponent();
-    expect(screen.getByRole("heading", { name: /Join Us\./i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Appointment Booking\./i })).toBeInTheDocument();
     expect(screen.getByLabelText(/First Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Last Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Username/i)).toBeInTheDocument();

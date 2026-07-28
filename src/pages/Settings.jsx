@@ -3,6 +3,60 @@ import { useAuth } from "../context/AuthContext";
 
 const API_BASE = "/api/v1";
 
+const SettingsSectionHeader = ({ title, itemName, onAdd, onSave, isSaving }) => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "1.5rem",
+      borderBottom: "1px solid var(--border-light)",
+      paddingBottom: "1rem",
+    }}
+  >
+    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <h3 style={{ margin: 0, fontSize: "1.125rem" }}>{title}</h3>
+      <button
+        type="button"
+        onClick={onAdd}
+        style={{
+          background: "none",
+          border: "none",
+          color: "var(--brand-primary)",
+          cursor: "pointer",
+          fontWeight: "600",
+          fontSize: "0.875rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.25rem",
+        }}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Add {itemName}
+      </button>
+    </div>
+    <button
+      type="button"
+      className="btn btn-primary"
+      style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+      onClick={onSave}
+      disabled={isSaving}
+    >
+      {isSaving ? "Saving..." : `Save ${title}`}
+    </button>
+  </div>
+);
+
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SLOT_DURATIONS = [15, 30, 45, 60];
 const TODAY = new Date().toISOString().split("T")[0];
@@ -614,15 +668,14 @@ function GeneralTab({
           )}
         </div>
 
-        <div
+        <fieldset
           className="form-group"
-          style={{ marginTop: "1rem" }}
-          role="group"
+          style={{ marginTop: "1rem", border: "none", padding: 0 }}
           aria-labelledby="slot-duration-label"
         >
-          <span className="form-label" id="slot-duration-label">
+          <legend className="form-label" id="slot-duration-label">
             Slot Duration
-          </span>
+          </legend>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             {SLOT_DURATIONS.map((dur) => (
               <button
@@ -654,7 +707,7 @@ function GeneralTab({
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
       </div>
 
       {/* Weekly Schedule Card */}
@@ -775,56 +828,13 @@ function BreaksTab({
 }) {
   return (
     <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-          borderBottom: "1px solid var(--border-light)",
-          paddingBottom: "1rem",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Break Times</h3>
-          <button
-            type="button"
-            onClick={addBreak}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--brand-primary)",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "0.875rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.25rem",
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Add Break
-          </button>
-        </div>
-        <button
-          className="btn btn-primary"
-          style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
-          onClick={saveBreaks}
-          disabled={savingBreaks}
-        >
-          {savingBreaks ? "Saving..." : "Save Breaks"}
-        </button>
-      </div>
+      <SettingsSectionHeader
+        title="Break Times"
+        itemName="Break"
+        onAdd={addBreak}
+        onSave={saveBreaks}
+        isSaving={savingBreaks}
+      />
 
       {(!settings?.break_times || settings.break_times.length === 0) && (
         <div className="empty-state" style={{ padding: "2rem 1rem" }}>
@@ -927,56 +937,13 @@ function HolidaysTab({
 }) {
   return (
     <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-          borderBottom: "1px solid var(--border-light)",
-          paddingBottom: "1rem",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Holidays & Time Off</h3>
-          <button
-            type="button"
-            onClick={addHoliday}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--brand-primary)",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "0.875rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.25rem",
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Add Holiday
-          </button>
-        </div>
-        <button
-          className="btn btn-primary"
-          style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
-          onClick={saveHolidays}
-          disabled={savingHolidays}
-        >
-          {savingHolidays ? "Saving..." : "Save Holidays"}
-        </button>
-      </div>
+      <SettingsSectionHeader
+        title="Holidays"
+        itemName="Holiday"
+        onAdd={addHoliday}
+        onSave={saveHolidays}
+        isSaving={savingHolidays}
+      />
 
       {(!settings?.holidays || settings.holidays.length === 0) && (
         <div className="empty-state" style={{ padding: "2rem 1rem" }}>

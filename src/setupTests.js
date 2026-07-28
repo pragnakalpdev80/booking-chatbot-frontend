@@ -5,5 +5,5 @@ if (!global.crypto) {
 }
 if (!global.crypto.randomUUID) {
   global.crypto.randomUUID = () =>
-    Math.random().toString(36).substring(2) + Date.now().toString(36);
+    Math.random().toString(36).substring(2) + Date.now().toString(36); // NOSONAR
 }
