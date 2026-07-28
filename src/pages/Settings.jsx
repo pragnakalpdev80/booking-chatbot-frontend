@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Banner from "../components/Banner";
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE = "/api/v1";
@@ -423,44 +424,8 @@ function Settings() {
         </div>
       )}
 
-      {error && (
-        <div className="banner banner-error">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="banner banner-success">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-          {success}
-        </div>
-      )}
+      <Banner type="error" message={error} />
+      <Banner type="success" message={success} />
 
       {/* Tabs Navigation */}
       <div

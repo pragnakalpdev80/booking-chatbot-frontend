@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Banner from "../components/Banner";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AppointmentsTable from "../components/dashboard/AppointmentsTable";
@@ -38,25 +39,7 @@ function ProviderDashboard() {
   }
 
   if (error) {
-    return (
-      <div className="banner banner-error">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-        {error}
-      </div>
-    );
+    return <Banner type="error" message={error} />;
   }
 
   return (

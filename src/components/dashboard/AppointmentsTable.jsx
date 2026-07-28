@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Banner from "../Banner";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Pagination from "./Pagination";
@@ -126,11 +127,7 @@ function AppointmentsTable({ endpoint, title, description, emptyTitle }) {
 
   const renderTableContent = () => {
     if (error) {
-      return (
-        <div className="banner banner-error" style={{ margin: "1.5rem" }}>
-          {error}
-        </div>
-      );
+      return <Banner type="error" message={error} style={{ margin: "1.5rem" }} />;
     }
     if (loading) {
       return (
@@ -258,25 +255,7 @@ function AppointmentsTable({ endpoint, title, description, emptyTitle }) {
         <p style={{ color: "var(--text-secondary)" }}>{description}</p>
       </div>
 
-      {filterError && (
-        <div className="banner banner-error" style={{ marginBottom: "1rem" }}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          {filterError}
-        </div>
-      )}
+      <Banner type="error" message={filterError} style={{ marginBottom: "1rem" }} />
 
       <div className="card" style={{ marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap" }}>
