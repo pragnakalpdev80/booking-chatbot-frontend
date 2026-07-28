@@ -7,7 +7,7 @@ import PaymentCard from "./PaymentCard";
 const ChatMessage = ({ role, content, options, onReply, disabled, isTyping }) => {
   // Extract slots — tolerant regex handles LLM drift:
   // Accepts: [SLOT: 2026-07-27 09:00], SLOT: 2026-07-27 09:00, [SLOT:2026-07-27 09:00], etc.
-  const slotRegex = /\[?\s*SLOT\s*:\s*(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}[^\]\n]*)\s*\]?/gi;
+  const slotRegex = /\[?\s*SLOT\s*:\s*(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}[^\]\n]*?)\]?/gi;
   const slots = [];
   let match;
   // Reset lastIndex before exec loop (safety for global regex reuse)
@@ -29,7 +29,7 @@ const ChatMessage = ({ role, content, options, onReply, disabled, isTyping }) =>
 
   // Remove the raw slot tags from the text rendered to the user
   // Use a fresh regex instance with the same pattern (global flag requires a new exec context)
-  const cleanSlotRegex = /\[?\s*SLOT\s*:\s*\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}[^\]\n]*\s*\]?/gi;
+  const cleanSlotRegex = /\[?\s*SLOT\s*:\s*\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}[^\]\n]*?\]?/gi;
   const displayContent = content.replace(cleanSlotRegex, "").replace(payRegex, "").trim();
 
   return (
@@ -48,7 +48,11 @@ const ChatMessage = ({ role, content, options, onReply, disabled, isTyping }) =>
         )}
 
         {role === "assistant" && payInfo && (
-          <PaymentCard orderId={payInfo.orderId} onReply={onReply} disabled={disabled || isTyping} />
+          <PaymentCard
+            orderId={payInfo.orderId}
+            onReply={onReply}
+            disabled={disabled || isTyping}
+          />
         )}
       </div>
     </div>

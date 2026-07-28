@@ -88,7 +88,11 @@ export default function ProviderSelector() {
           </svg>
           <h2 style={{ marginBottom: "0.5rem" }}>Unable to load providers</h2>
           <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>{error}</p>
-          <button className="btn btn-primary" onClick={() => window.location.reload()}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
             Try Again
           </button>
         </div>

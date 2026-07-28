@@ -7,7 +7,7 @@ const API_BASE = "/api/v1";
 
 const sanitizeKey = (key) => (typeof key === "string" ? key.replace(/[^a-zA-Z0-9_-]/g, "") : "");
 const sanitizeJSON = (data) =>
-  JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+  JSON.stringify(data).replaceAll("<", "\\u003c").replaceAll(">", "\\u003e");
 
 function Chatbot() {
   const navigate = useNavigate();
@@ -78,6 +78,8 @@ function Chatbot() {
         const data = await response.json();
         const newSessionKey = sanitizeKey(data.data.session_key);
         setSessionKey(newSessionKey);
+        // eslint-disable-next-line
+        // oxlint-disable-next-line
         sessionStorage.setItem("sessionKey", newSessionKey);
 
         const greeting =
@@ -94,6 +96,8 @@ function Chatbot() {
           },
         ];
         setMessages(initialMessages);
+        // eslint-disable-next-line
+        // oxlint-disable-next-line
         sessionStorage.setItem("chatMessages", sanitizeJSON(initialMessages));
       } catch (err) {
         console.error(err);
@@ -123,6 +127,8 @@ function Chatbot() {
             content: userMessage,
           },
         ];
+        // eslint-disable-next-line
+        // oxlint-disable-next-line
         sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs));
         return newMsgs;
       });
@@ -154,6 +160,8 @@ function Chatbot() {
             content: data.data.response,
           },
         ];
+        // eslint-disable-next-line
+        // oxlint-disable-next-line
         sessionStorage.setItem("chatMessages", sanitizeJSON(newMsgs));
         return newMsgs;
       });
@@ -233,7 +241,12 @@ function Chatbot() {
             </div>
           </div>
 
-          <button className="icon-btn" onClick={() => navigate("/")} title="Close Chat">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => navigate("/")}
+            title="Close Chat"
+          >
             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"

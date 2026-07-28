@@ -26,15 +26,11 @@ const Pagination = ({ count, pageSize, currentPage, onPageChange }) => {
     }
 
     // Add first and last pages if not already in the array
-    if (pages[0] !== 1 && pages[0] !== "...") {
-      pages.unshift(1);
-    } else if (pages[0] === "...") {
+    if (pages[0] !== 1) {
       pages.unshift(1);
     }
 
-    if (pages[pages.length - 1] !== totalPages && pages[pages.length - 1] !== "...") {
-      pages.push(totalPages);
-    } else if (pages[pages.length - 1] === "...") {
+    if (pages.at(-1) !== totalPages) {
       pages.push(totalPages);
     }
 
@@ -68,7 +64,10 @@ const Pagination = ({ count, pageSize, currentPage, onPageChange }) => {
       {pages.map((page, index) => {
         if (page === "...") {
           return (
-            <span key={`ellipsis-${index}`} className="pagination-btn ellipsis">
+            <span
+              key={`ellipsis-${index < pages.length / 2 ? "left" : "right"}`}
+              className="pagination-btn ellipsis"
+            >
               ...
             </span>
           );

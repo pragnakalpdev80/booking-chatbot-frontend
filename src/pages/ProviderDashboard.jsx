@@ -124,7 +124,12 @@ function ProviderDashboard() {
         <div
           className="card stat-card"
           style={{ cursor: "pointer", transition: "all 0.2s ease" }}
+          role="button"
+          tabIndex={0}
           onClick={() => navigate("/provider/all-appointments")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") navigate("/provider/all-appointments");
+          }}
         >
           <div className="stat-info">
             <h3>Total Bookings</h3>
@@ -190,7 +195,12 @@ function ProviderDashboard() {
         <div
           className="card stat-card"
           style={{ cursor: "pointer", transition: "all 0.2s ease" }}
+          role="button"
+          tabIndex={0}
           onClick={() => navigate("/provider/cancelled-appointments")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") navigate("/provider/cancelled-appointments");
+          }}
         >
           <div className="stat-info">
             <h3>Cancelled</h3>
