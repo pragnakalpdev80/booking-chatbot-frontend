@@ -13,4 +13,9 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    coverage: {
+      exclude: ["src/setupTests.js", "src/main.jsx", "eslint.config.js"],
+    },
+  },
 });
