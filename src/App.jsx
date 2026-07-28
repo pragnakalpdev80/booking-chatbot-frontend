@@ -39,6 +39,9 @@ function AppRoutes() {
         <Route path="cancelled-appointments" element={<CancelledAppointments />} />
         <Route path="settings" element={<Settings />} />
       </Route>
+      <Route path="/login" element={<Navigate to="/provider/login" replace />} />
+      <Route path="/register" element={<Navigate to="/provider/register" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
