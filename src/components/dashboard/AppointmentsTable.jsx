@@ -12,7 +12,7 @@ function AppointmentsTable({ endpoint, title, description, emptyTitle }) {
   const [error, setError] = useState("");
   const [filterError, setFilterError] = useState("");
   const today = new Date().toISOString().split("T")[0];
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const startDate = searchParams.get("start_date") || "";
@@ -35,6 +35,10 @@ function AppointmentsTable({ endpoint, title, description, emptyTitle }) {
         });
 
         if (!res.ok) {
+          if (res.status === 401) {
+            logout();
+            return;
+          }
           if (res.status === 404) {
             setData({ count: 0, results: [] });
             return;
@@ -54,7 +58,7 @@ function AppointmentsTable({ endpoint, title, description, emptyTitle }) {
     if (token) {
       fetchAppointments();
     }
-  }, [token, startDate, endDate, emailQuery, currentPage, endpoint]);
+  }, [token, startDate, endDate, emailQuery, currentPage, endpoint, logout]);
 
   const handleStartDateChange = (e) => {
     const newStart = e.target.value;

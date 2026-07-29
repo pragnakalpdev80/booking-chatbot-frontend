@@ -10,7 +10,7 @@ function ProviderDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -19,6 +19,10 @@ function ProviderDashboard() {
         const statsRes = await fetch(`${API_BASE}/dashboard/stats/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (statsRes.status === 401) {
+          logout();
+          return;
+        }
         if (!statsRes.ok) throw new Error("Failed to fetch stats");
         const statsData = await statsRes.json();
         setStats(statsData.data);
@@ -32,7 +36,7 @@ function ProviderDashboard() {
     if (token) {
       fetchDashboardData();
     }
-  }, [token]);
+  }, [token, logout]);
 
   if (loading) {
     return <div style={{ padding: "2rem" }}>Loading dashboard...</div>;

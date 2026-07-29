@@ -69,12 +69,13 @@ function Settings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
 
   const [savingGeneral, setSavingGeneral] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [savingBreaks, setSavingBreaks] = useState(false);
   const [savingHolidays, setSavingHolidays] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
   const [breakErrors, setBreakErrors] = useState({});
 
   const [activeTab, setActiveTab] = useState("general");
@@ -85,6 +86,10 @@ function Settings() {
         const res = await fetch(`${API_BASE}/admin/provider-settings/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.status === 401) {
+          logout();
+          return;
+        }
         if (!res.ok) throw new Error("Failed to fetch settings");
         const data = await res.json();
         setSettings(data.data);
@@ -97,7 +102,7 @@ function Settings() {
     };
 
     if (token) fetchSettings();
-  }, [token]);
+  }, [token, logout]);
 
   useEffect(() => {
     if (!token || !settings?.is_google_connected) return;
@@ -126,6 +131,8 @@ function Settings() {
           timezone: settings.timezone,
           slot_duration: settings.slot_duration,
           calendar_id: settings.calendar_id,
+          payment_required: settings.payment_required,
+          booking_fee_paise: settings.booking_fee_paise,
         }),
       });
       if (!res.ok) throw new Error("Failed to save general settings");
@@ -136,6 +143,8 @@ function Settings() {
         timezone: settings.timezone,
         slot_duration: settings.slot_duration,
         calendar_id: settings.calendar_id,
+        payment_required: settings.payment_required,
+        booking_fee_paise: settings.booking_fee_paise,
       }));
     } catch (err) {
       setError(err.message);
@@ -210,11 +219,36 @@ function Settings() {
     }
   };
 
+  const togglePaymentRequired = async (newValue) => {
+    setSettings((prev) => ({ ...prev, payment_required: newValue }));
+    setSavingPayment(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/provider-settings/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ payment_required: newValue }),
+      });
+      if (!res.ok) throw new Error("Failed to update payment setting");
+      setOriginalSettings((prev) => ({ ...prev, payment_required: newValue }));
+      showSuccess(newValue ? "Payment required enabled." : "Payment required disabled.");
+    } catch (err) {
+      // Revert optimistic update on failure
+      setSettings((prev) => ({ ...prev, payment_required: !newValue }));
+      setError(err.message);
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
   const handleConnectGoogle = async () => {
     try {
       const res = await fetch(`${API_BASE}/calendar/login/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        logout();
+        return;
+      }
       if (!res.ok) throw new Error("Failed to fetch OAuth URL");
       const data = await res.json();
       window.location.href = data.data.auth_url;
@@ -592,6 +626,8 @@ function Settings() {
             applyMondayToAll={applyMondayToAll}
             WEEKDAYS={WEEKDAYS}
             SLOT_DURATIONS={SLOT_DURATIONS}
+            savingPayment={savingPayment}
+            togglePaymentRequired={togglePaymentRequired}
           />
         )}
 
@@ -636,6 +672,8 @@ function GeneralTab({
   applyMondayToAll,
   WEEKDAYS,
   SLOT_DURATIONS,
+  savingPayment,
+  togglePaymentRequired,
 }) {
   const isMondayActive = settings?.day_schedules?.["0"]?.is_active;
 
@@ -763,6 +801,113 @@ function GeneralTab({
             ))}
           </div>
         </fieldset>
+      </div>
+
+      {/* Payment Settings Card */}
+      <div className="card">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.25rem",
+            borderBottom: "1px solid var(--border-light)",
+            paddingBottom: "1rem",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Payment Settings</h3>
+            <p
+              style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}
+            >
+              When enabled, clients must pay before their appointment is confirmed.
+            </p>
+          </div>
+          {savingPayment && (
+            <span style={{ fontSize: "0.8rem", color: "var(--text-tertiary)" }}>Saving…</span>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "1rem",
+            background: settings?.payment_required
+              ? "var(--brand-primary-light)"
+              : "var(--bg-muted)",
+            borderRadius: "var(--radius-md)",
+            border: settings?.payment_required
+              ? "1px solid var(--brand-primary)"
+              : "1px solid var(--border-light)",
+            transition: "all 0.2s ease",
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--text-main)" }}>
+              Require Payment Before Booking
+            </div>
+            <div
+              style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}
+            >
+              {settings?.payment_required
+                ? "Clients will be redirected to pay before their slot is confirmed."
+                : "Appointments are confirmed immediately without payment."}
+            </div>
+          </div>
+          <label
+            className="toggle-switch"
+            aria-label="Toggle payment required"
+            style={{ flexShrink: 0, marginLeft: "1rem" }}
+          >
+            <input
+              type="checkbox"
+              id="paymentRequired"
+              checked={!!settings?.payment_required}
+              disabled={savingPayment}
+              onChange={(e) => togglePaymentRequired(e.target.checked)}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+
+        {settings?.payment_required && (
+          <div className="form-group" style={{ marginTop: "1.25rem" }}>
+            <label htmlFor="bookingFee" className="form-label">
+              Booking Fee (₹)
+            </label>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              <input
+                id="bookingFee"
+                type="number"
+                min="1"
+                step="1"
+                className="form-input"
+                style={{ maxWidth: "180px" }}
+                value={Math.round((settings?.booking_fee_paise || 0) / 100)}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    booking_fee_paise: Math.round(Number(e.target.value) * 100),
+                  })
+                }
+              />
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+                onClick={saveGeneralSettings}
+                disabled={savingGeneral}
+              >
+                {savingGeneral ? "Saving…" : "Save Fee"}
+              </button>
+            </div>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-tertiary)", marginTop: "0.4rem" }}>
+              Amount charged per appointment (stored in paise, displayed in ₹).
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Weekly Schedule Card */}

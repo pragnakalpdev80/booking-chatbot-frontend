@@ -148,8 +148,8 @@ describe("Settings Component", () => {
     expect(screen.getByText("Monday")).toBeInTheDocument();
 
     // Toggle Tuesday (index 1)
-    const toggles = screen.getAllByRole("checkbox");
-    fireEvent.click(toggles[1]); // Tuesday toggle
+    const tuesdayToggle = screen.getByLabelText(/Toggle Tuesday/i); // '1' is Tuesday
+    fireEvent.click(tuesdayToggle);
 
     global.fetch.mockImplementation((url, options) => {
       if (options && options.method === "PATCH") {
