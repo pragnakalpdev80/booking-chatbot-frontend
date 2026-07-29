@@ -11,6 +11,7 @@ function AppointmentsTable({ endpoint, title, description, emptyTitle }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterError, setFilterError] = useState("");
+  const today = new Date().toISOString().split("T")[0];
   const { token } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -280,6 +281,7 @@ function AppointmentsTable({ endpoint, title, description, emptyTitle }) {
               id="startDate"
               type="date"
               className="form-input"
+              min={today}
               value={startDate}
               onChange={handleStartDateChange}
             />

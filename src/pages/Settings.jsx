@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 const API_BASE = "/api/v1";
 
-const SettingsSectionHeader = ({ title, itemName, onAdd, onSave, isSaving }) => (
+const SettingsSectionHeader = ({ title, itemName, onAdd, onSave, isSaving, disabled = false }) => (
   <div
     style={{
       display: "flex",
@@ -51,7 +51,7 @@ const SettingsSectionHeader = ({ title, itemName, onAdd, onSave, isSaving }) => 
       className="btn btn-primary"
       style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
       onClick={onSave}
-      disabled={isSaving}
+      disabled={isSaving || disabled}
     >
       {isSaving ? "Saving..." : `Save ${title}`}
     </button>
@@ -75,6 +75,7 @@ function Settings() {
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [savingBreaks, setSavingBreaks] = useState(false);
   const [savingHolidays, setSavingHolidays] = useState(false);
+  const [breakErrors, setBreakErrors] = useState({});
 
   const [activeTab, setActiveTab] = useState("general");
 
@@ -243,21 +244,39 @@ function Settings() {
     setSettings({ ...settings, day_schedules: updated });
   };
 
+  const applyMondayToAll = () => {
+    const mondaySchedule = settings.day_schedules?.["0"];
+    if (!mondaySchedule) return;
+
+    const updated = { ...settings.day_schedules };
+    for (let i = 0; i < 7; i++) {
+      if (updated[String(i)]) {
+        updated[String(i)] = {
+          ...updated[String(i)],
+          start: mondaySchedule.start,
+          end: mondaySchedule.end,
+        };
+      } else {
+        updated[String(i)] = {
+          is_active: false,
+          start: mondaySchedule.start,
+          end: mondaySchedule.end,
+        };
+      }
+    }
+    setSettings({ ...settings, day_schedules: updated });
+  };
+
   const activeDays = WEEKDAYS.map((day, index) => ({ name: day, index })).filter(
     (d) => settings?.day_schedules?.[String(d.index)]?.is_active
   );
 
   const addBreak = () => {
-    console.log(
-      "addBreak called! activeDays:",
-      activeDays,
-      "day_schedules:",
-      settings?.day_schedules
-    );
     if (activeDays.length === 0) {
       setError("Please enable at least one working day in the schedule first.");
       return;
     }
+    const day = settings.day_schedules[String(activeDays[0].index)];
     setSettings({
       ...settings,
       break_times: [
@@ -265,8 +284,8 @@ function Settings() {
         {
           id: crypto.randomUUID(),
           weekday: activeDays[0].index,
-          start: "12:00",
-          end: "13:00",
+          start: day ? day.start : "12:00",
+          end: day ? day.end : "13:00",
           label: "Lunch",
         },
       ],
@@ -275,14 +294,80 @@ function Settings() {
 
   const removeBreak = (index) => {
     const updated = [...settings.break_times];
-    updated.splice(index, 1);
+    const removed = updated.splice(index, 1)[0];
+    setBreakErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[removed.id];
+      return newErrors;
+    });
     setSettings({ ...settings, break_times: updated });
   };
 
+  const applyBreakOverlapStrategy = (newBreak, existingBreaks) => {
+    const sameDayBreaks = existingBreaks.filter(
+      (b) => b.id !== newBreak.id && b.weekday === newBreak.weekday
+    );
+    const overlapping = sameDayBreaks.filter(
+      (b) => newBreak.start < b.end && b.start < newBreak.end
+    );
+
+    for (const b of overlapping) {
+      const newContainsExisting = newBreak.start <= b.start && newBreak.end >= b.end;
+      const existingContainsNew = b.start <= newBreak.start && b.end >= newBreak.end;
+
+      if (existingContainsNew) {
+        return { action: "block", message: `Already covered by ${b.start}-${b.end}.` };
+      }
+      if (!newContainsExisting) {
+        return { action: "block", message: `Partially overlaps with ${b.start}-${b.end}.` };
+      }
+    }
+
+    const breaksToRemove = overlapping.filter(
+      (b) => newBreak.start <= b.start && newBreak.end >= b.end
+    );
+    return { action: "replace", removeIds: breaksToRemove.map((b) => b.id) };
+  };
+
   const updateBreak = (index, field, value) => {
-    const updated = [...settings.break_times];
-    updated[index][field] = value;
-    setSettings({ ...settings, break_times: updated });
+    let updated = [...settings.break_times];
+    updated[index] = { ...updated[index], [field]: value };
+    const currentBreak = updated[index];
+
+    let errorMsg = null;
+    if (currentBreak.start >= currentBreak.end) {
+      errorMsg = "Start time must be before end time.";
+    } else {
+      const day = settings.day_schedules[String(currentBreak.weekday)];
+      if (day && day.is_active) {
+        if (currentBreak.start < day.start || currentBreak.end > day.end) {
+          errorMsg = "Break must be within working hours.";
+        }
+      }
+    }
+
+    if (errorMsg) {
+      setBreakErrors((prev) => ({ ...prev, [currentBreak.id]: errorMsg }));
+      setSettings({ ...settings, break_times: updated });
+      return;
+    }
+
+    const strategy = applyBreakOverlapStrategy(currentBreak, updated);
+    if (strategy.action === "block") {
+      setBreakErrors((prev) => ({ ...prev, [currentBreak.id]: strategy.message }));
+      setSettings({ ...settings, break_times: updated });
+    } else if (strategy.action === "replace") {
+      if (strategy.removeIds.length > 0) {
+        updated = updated.filter((b) => !strategy.removeIds.includes(b.id));
+        showSuccess(`${strategy.removeIds.length} overlapping break(s) replaced.`);
+      }
+      setBreakErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[currentBreak.id];
+        return newErrors;
+      });
+      setSettings({ ...settings, break_times: updated });
+    }
   };
 
   const addHoliday = () => {
@@ -504,6 +589,7 @@ function Settings() {
             saveSchedule={saveSchedule}
             calendars={calendars}
             updateDaySchedule={updateDaySchedule}
+            applyMondayToAll={applyMondayToAll}
             WEEKDAYS={WEEKDAYS}
             SLOT_DURATIONS={SLOT_DURATIONS}
           />
@@ -518,6 +604,7 @@ function Settings() {
             removeBreak={removeBreak}
             updateBreak={updateBreak}
             activeDays={activeDays}
+            breakErrors={breakErrors}
           />
         )}
 
@@ -546,9 +633,12 @@ function GeneralTab({
   saveSchedule,
   calendars,
   updateDaySchedule,
+  applyMondayToAll,
   WEEKDAYS,
   SLOT_DURATIONS,
 }) {
+  const isMondayActive = settings?.day_schedules?.["0"]?.is_active;
+
   return (
     <div
       style={{
@@ -688,15 +778,28 @@ function GeneralTab({
           }}
         >
           <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Weekly Schedule</h3>
-          <button
-            type="button"
-            className="btn btn-primary"
-            style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
-            onClick={saveSchedule}
-            disabled={savingSchedule}
-          >
-            {savingSchedule ? "Saving..." : "Save Schedule"}
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            {isMondayActive && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+                onClick={applyMondayToAll}
+                disabled={savingSchedule}
+              >
+                Apply to all working days
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+              onClick={saveSchedule}
+              disabled={savingSchedule}
+            >
+              {savingSchedule ? "Saving..." : "Save Schedule"}
+            </button>
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -790,7 +893,10 @@ function BreaksTab({
   removeBreak,
   updateBreak,
   activeDays,
+  breakErrors = {},
 }) {
+  const hasErrors = Object.values(breakErrors).some((err) => !!err);
+
   return (
     <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
       <SettingsSectionHeader
@@ -799,6 +905,7 @@ function BreaksTab({
         onAdd={addBreak}
         onSave={saveBreaks}
         isSaving={savingBreaks}
+        disabled={hasErrors}
       />
 
       {(!settings?.break_times || settings.break_times.length === 0) && (
@@ -884,6 +991,20 @@ function BreaksTab({
                 onChange={(e) => updateBreak(idx, "end", e.target.value)}
               />
             </div>
+
+            {/* Row 3: Inline Error */}
+            {breakErrors[brk.id] && (
+              <div
+                style={{
+                  color: "var(--danger-color)",
+                  fontSize: "0.875rem",
+                  marginTop: "-0.25rem",
+                  fontWeight: "500",
+                }}
+              >
+                {breakErrors[brk.id]}
+              </div>
+            )}
           </div>
         ))}
       </div>
