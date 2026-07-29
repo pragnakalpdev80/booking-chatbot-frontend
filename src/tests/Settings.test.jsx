@@ -43,7 +43,7 @@ describe("Settings Component", () => {
                   0: { is_active: true, start: "09:00", end: "17:00" },
                 },
                 break_times: [
-                  { id: "break1", weekday: 1, start: "12:00", end: "13:00", label: "Lunch" },
+                  { id: "break1", weekday: 0, start: "12:00", end: "13:00", label: "Lunch" },
                 ],
                 holidays: [{ id: "hol1", date: "2026-12-25", label: "Christmas" }],
               },
@@ -314,5 +314,90 @@ describe("Settings Component", () => {
       const connectCall = fetchCalls.find((call) => call[0] === "/api/v1/calendar/login/");
       expect(connectCall).toBeTruthy();
     });
+  });
+
+  it("applies Monday schedule to all working days", async () => {
+    await renderComponent();
+
+    const applyToAllBtn = screen.getByRole("button", { name: /Apply to all working days/i });
+    fireEvent.click(applyToAllBtn);
+
+    global.fetch.mockImplementation((url, options) => {
+      if (options && options.method === "PATCH") {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ message: "Saved" }) });
+      }
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Schedule" }));
+
+    await waitFor(() => {
+      const putCall = global.fetch.mock.calls.find((call) => call[1] && call[1].method === "PATCH");
+      expect(putCall).toBeTruthy();
+      const body = JSON.parse(putCall[1].body);
+      expect(body.day_schedules["1"].start).toBe("09:00");
+      expect(body.day_schedules["2"].end).toBe("17:00");
+      expect(body.day_schedules["6"].is_active).toBe(false);
+    });
+  });
+
+  it("validates break times for overlap and boundaries", async () => {
+    await renderComponent();
+
+    // Go to breaks tab
+    fireEvent.click(screen.getByRole("button", { name: /Break Times/i }));
+
+    // Mock initial data has a break on Monday 12:00-13:00.
+    // Let's add a new break
+    fireEvent.click(screen.getByRole("button", { name: /Add Break/i }));
+
+    let breakStarts_09 = screen.getAllByDisplayValue("09:00");
+    let breakEnds_17 = screen.getAllByDisplayValue("17:00");
+
+    // The second break starts exactly at 09:00-17:00 by default (day schedule hours).
+    // Change its start time to 12:30.
+    fireEvent.change(breakStarts_09[0], { target: { value: "12:30" } });
+    fireEvent.change(breakEnds_17[0], { target: { value: "13:30" } });
+
+    expect(await screen.findByText("Partially overlaps with 12:00-13:00.")).toBeInTheDocument();
+
+    // Test boundary: outside working hours (day starts at 09:00)
+    fireEvent.change(breakStarts_09[0], { target: { value: "08:00" } });
+    expect(await screen.findByText("Break must be within working hours.")).toBeInTheDocument();
+
+    // Test start >= end
+    fireEvent.change(breakStarts_09[0], { target: { value: "15:00" } });
+    fireEvent.change(breakEnds_17[0], { target: { value: "14:00" } });
+    expect(await screen.findByText("Start time must be before end time.")).toBeInTheDocument();
+
+    // Test already covered
+    fireEvent.change(breakStarts_09[0], { target: { value: "12:15" } });
+    fireEvent.change(breakEnds_17[0], { target: { value: "12:45" } });
+    expect(await screen.findByText("Already covered by 12:00-13:00.")).toBeInTheDocument();
+
+    // Test partial overlap is already done above.
+
+    // Ensure save is disabled when there's an error
+    const saveBtn = screen.getByRole("button", { name: "Save Break Times" });
+    expect(saveBtn).toBeDisabled();
+  });
+
+  it("replaces superset breaks and shows success message", async () => {
+    await renderComponent();
+
+    fireEvent.click(screen.getByRole("button", { name: /Break Times/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Add Break/i }));
+
+    const breakStarts_09 = screen.getAllByDisplayValue("09:00");
+    const breakEnds_17 = screen.getAllByDisplayValue("17:00");
+
+    // Second break is 09:00-17:00. Let's make it 11:00-14:00 to superset the first break (12-13).
+    fireEvent.change(breakStarts_09[0], { target: { value: "11:00" } });
+    fireEvent.change(breakEnds_17[0], { target: { value: "14:00" } });
+
+    expect(await screen.findByText("1 overlapping break(s) replaced.")).toBeInTheDocument();
+
+    // Now there should only be one break displayed (the 11:00 one)
+    expect(screen.getAllByDisplayValue("11:00").length).toBe(1);
+    expect(screen.queryAllByDisplayValue("12:00").length).toBe(0);
   });
 });

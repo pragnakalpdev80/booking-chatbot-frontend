@@ -154,4 +154,21 @@ describe("AppointmentsTable", () => {
 
     expect(await screen.findByText("End date cannot be before start date.")).toBeInTheDocument();
   });
+
+  it("sets min attribute on start date to today", async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ count: 0, data: [] }),
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading appointments...")).not.toBeInTheDocument();
+    });
+
+    const startInput = screen.getByLabelText("Start Date");
+    const today = new Date().toISOString().split("T")[0];
+    expect(startInput).toHaveAttribute("min", today);
+  });
 });
