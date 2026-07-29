@@ -284,8 +284,8 @@ function Settings() {
         {
           id: crypto.randomUUID(),
           weekday: activeDays[0].index,
-          start: day ? day.start : "12:00",
-          end: day ? day.end : "13:00",
+          start: day?.start ?? "12:00",
+          end: day?.end ?? "13:00",
           label: "Lunch",
         },
       ],
@@ -339,7 +339,7 @@ function Settings() {
       errorMsg = "Start time must be before end time.";
     } else {
       const day = settings.day_schedules[String(currentBreak.weekday)];
-      if (day && day.is_active) {
+      if (day?.is_active) {
         if (currentBreak.start < day.start || currentBreak.end > day.end) {
           errorMsg = "Break must be within working hours.";
         }
