@@ -141,7 +141,10 @@ export default function MockPayment() {
             type="button"
             className="btn btn-primary"
             style={{ width: "100%", marginTop: "1.5rem" }}
-            onClick={() => navigate("/chat")}
+            onClick={() => {
+              const slug = orderDetails?.provider_slug || sessionStorage.getItem("providerSlug");
+              navigate(slug ? `/${slug}/chat` : "/");
+            }}
           >
             Return to Chat
           </button>
@@ -172,7 +175,10 @@ export default function MockPayment() {
             type="button"
             className="btn btn-primary"
             style={{ width: "100%", marginTop: "1.5rem" }}
-            onClick={() => navigate("/chat")}
+            onClick={() => {
+              const slug = orderDetails?.provider_slug || sessionStorage.getItem("providerSlug");
+              navigate(slug ? `/${slug}/chat` : "/");
+            }}
           >
             Return to Chat
           </button>
