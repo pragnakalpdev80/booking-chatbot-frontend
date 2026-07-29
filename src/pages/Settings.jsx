@@ -576,6 +576,24 @@ function Settings() {
         </button>
         <button
           type="button"
+          onClick={() => setActiveTab("payment")}
+          style={{
+            background: "none",
+            border: "none",
+            padding: "0.75rem 0",
+            cursor: "pointer",
+            fontWeight: activeTab === "payment" ? "600" : "500",
+            color: activeTab === "payment" ? "var(--brand-primary)" : "var(--text-secondary)",
+            borderBottom:
+              activeTab === "payment" ? "2px solid var(--brand-primary)" : "2px solid transparent",
+            marginBottom: "-1px",
+            transition: "all 0.2s ease",
+          }}
+        >
+          Payments
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveTab("breaks")}
           style={{
             background: "none",
@@ -631,6 +649,16 @@ function Settings() {
           />
         )}
 
+        {activeTab === "payment" && (
+          <PaymentTab
+            settings={settings}
+            setSettings={setSettings}
+            savingPayment={savingPayment}
+            togglePaymentRequired={togglePaymentRequired}
+            saveGeneralSettings={saveGeneralSettings}
+          />
+        )}
+
         {activeTab === "breaks" && (
           <BreaksTab
             settings={settings}
@@ -672,8 +700,6 @@ function GeneralTab({
   applyMondayToAll,
   WEEKDAYS,
   SLOT_DURATIONS,
-  savingPayment,
-  togglePaymentRequired,
 }) {
   const isMondayActive = settings?.day_schedules?.["0"]?.is_active;
 
@@ -801,113 +827,6 @@ function GeneralTab({
             ))}
           </div>
         </fieldset>
-      </div>
-
-      {/* Payment Settings Card */}
-      <div className="card">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1.25rem",
-            borderBottom: "1px solid var(--border-light)",
-            paddingBottom: "1rem",
-          }}
-        >
-          <div>
-            <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Payment Settings</h3>
-            <p
-              style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}
-            >
-              When enabled, clients must pay before their appointment is confirmed.
-            </p>
-          </div>
-          {savingPayment && (
-            <span style={{ fontSize: "0.8rem", color: "var(--text-tertiary)" }}>Saving…</span>
-          )}
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "1rem",
-            background: settings?.payment_required
-              ? "var(--brand-primary-light)"
-              : "var(--bg-muted)",
-            borderRadius: "var(--radius-md)",
-            border: settings?.payment_required
-              ? "1px solid var(--brand-primary)"
-              : "1px solid var(--border-light)",
-            transition: "all 0.2s ease",
-          }}
-        >
-          <div>
-            <div style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--text-main)" }}>
-              Require Payment Before Booking
-            </div>
-            <div
-              style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}
-            >
-              {settings?.payment_required
-                ? "Clients will be redirected to pay before their slot is confirmed."
-                : "Appointments are confirmed immediately without payment."}
-            </div>
-          </div>
-          <label
-            className="toggle-switch"
-            aria-label="Toggle payment required"
-            style={{ flexShrink: 0, marginLeft: "1rem" }}
-          >
-            <input
-              type="checkbox"
-              id="paymentRequired"
-              checked={!!settings?.payment_required}
-              disabled={savingPayment}
-              onChange={(e) => togglePaymentRequired(e.target.checked)}
-            />
-            <span className="toggle-slider"></span>
-          </label>
-        </div>
-
-        {settings?.payment_required && (
-          <div className="form-group" style={{ marginTop: "1.25rem" }}>
-            <label htmlFor="bookingFee" className="form-label">
-              Booking Fee (₹)
-            </label>
-            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-              <input
-                id="bookingFee"
-                type="number"
-                min="1"
-                step="1"
-                className="form-input"
-                style={{ maxWidth: "180px" }}
-                value={Math.round((settings?.booking_fee_paise || 0) / 100)}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    booking_fee_paise: Math.round(Number(e.target.value) * 100),
-                  })
-                }
-              />
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
-                onClick={saveGeneralSettings}
-                disabled={savingGeneral}
-              >
-                {savingGeneral ? "Saving…" : "Save Fee"}
-              </button>
-            </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-tertiary)", marginTop: "0.4rem" }}>
-              Amount charged per appointment (stored in paise, displayed in ₹).
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Weekly Schedule Card */}
@@ -1240,3 +1159,123 @@ function HolidaysTab({
 }
 
 export default Settings;
+
+function PaymentTab({
+  settings,
+  setSettings,
+  savingPayment,
+  togglePaymentRequired,
+  saveGeneralSettings,
+}) {
+  return (
+    <div style={{ maxWidth: "600px" }}>
+      <div className="card">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.25rem",
+            borderBottom: "1px solid var(--border-light)",
+            paddingBottom: "1rem",
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.125rem" }}>Payment Settings</h3>
+            <p
+              style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}
+            >
+              When enabled, clients must pay before their appointment is confirmed.
+            </p>
+          </div>
+          {savingPayment && (
+            <span style={{ fontSize: "0.8rem", color: "var(--text-tertiary)" }}>Saving…</span>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "1rem",
+            background: settings?.payment_required
+              ? "var(--brand-primary-light)"
+              : "var(--bg-muted)",
+            borderRadius: "var(--radius-md)",
+            border: settings?.payment_required
+              ? "1px solid var(--brand-primary)"
+              : "1px solid var(--border-light)",
+            transition: "all 0.2s ease",
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--text-main)" }}>
+              Require Payment Before Booking
+            </div>
+            <div
+              style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}
+            >
+              {settings?.payment_required
+                ? "Clients will be redirected to pay before their slot is confirmed."
+                : "Appointments are confirmed immediately without payment."}
+            </div>
+          </div>
+          <label
+            className="toggle-switch"
+            aria-label="Toggle payment required"
+            style={{ flexShrink: 0, marginLeft: "1rem" }}
+          >
+            <input
+              type="checkbox"
+              id="paymentRequired"
+              checked={!!settings?.payment_required}
+              disabled={savingPayment}
+              onChange={(e) => togglePaymentRequired(e.target.checked)}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+
+        {settings?.payment_required && (
+          <div className="form-group" style={{ marginTop: "1.25rem" }}>
+            <label htmlFor="bookingFee" className="form-label">
+              Booking Fee (₹)
+            </label>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              <input
+                id="bookingFee"
+                type="text"
+                className="form-input"
+                style={{ maxWidth: "180px" }}
+                value={((settings?.booking_fee_paise || 0) / 100).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9.]/g, "");
+                  const parsed = parseFloat(raw);
+                  if (!isNaN(parsed)) {
+                    setSettings({
+                      ...settings,
+                      booking_fee_paise: Math.round(parsed * 100),
+                    });
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ padding: "0.4rem 1rem", fontSize: "0.875rem" }}
+                onClick={saveGeneralSettings}
+                disabled={savingPayment}
+              >
+                {savingPayment ? "Saving..." : "Save Fee"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
