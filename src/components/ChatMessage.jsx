@@ -7,8 +7,11 @@ import PaymentCard from "./PaymentCard";
 const ChatMessage = ({ role, content, options, onReply, disabled, isTyping }) => {
   // Extract slots — tolerant regex handles LLM drift:
   // Accepts: [SLOT: 2026-07-27 09:00], SLOT: 2026-07-27 09:00, [SLOT:2026-07-27 09:00], etc.
-  const slotRegex =
-    /\[\s*SLOT\s*:\s*(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2})[^\]]*\]|SLOT\s*:\s*(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2})/gi;
+  const DATE_PATTERN = "\\d{4}-\\d{2}-\\d{2}[T\\s]\\d{2}:\\d{2}";
+  const slotRegex = new RegExp(
+    `\\[\\s*SLOT\\s*:\\s*(${DATE_PATTERN})[^\\]]*\\]|SLOT\\s*:\\s*(${DATE_PATTERN})`,
+    "gi"
+  );
   const slots = [];
   let match;
   // Reset lastIndex before exec loop (safety for global regex reuse)
@@ -30,8 +33,10 @@ const ChatMessage = ({ role, content, options, onReply, disabled, isTyping }) =>
 
   // Remove the raw slot tags from the text rendered to the user
   // Use a fresh regex instance with the same pattern (global flag requires a new exec context)
-  const cleanSlotRegex =
-    /\[\s*SLOT\s*:\s*\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}[^\]]*\]|SLOT\s*:\s*\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}/gi;
+  const cleanSlotRegex = new RegExp(
+    `\\[\\s*SLOT\\s*:\\s*${DATE_PATTERN}[^\\]]*\\]|SLOT\\s*:\\s*${DATE_PATTERN}`,
+    "gi"
+  );
   const displayContent = content.replace(cleanSlotRegex, "").replace(payRegex, "").trim();
 
   return (

@@ -62,6 +62,30 @@ const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satur
 const SLOT_DURATIONS = [15, 30, 45, 60];
 const TODAY = new Date().toISOString().split("T")[0];
 
+const applyBreakOverlapStrategy = (newBreak, existingBreaks) => {
+  const sameDayBreaks = existingBreaks.filter(
+    (b) => b.id !== newBreak.id && b.weekday === newBreak.weekday
+  );
+  const overlapping = sameDayBreaks.filter((b) => newBreak.start < b.end && b.start < newBreak.end);
+
+  for (const b of overlapping) {
+    const newContainsExisting = newBreak.start <= b.start && newBreak.end >= b.end;
+    const existingContainsNew = b.start <= newBreak.start && b.end >= newBreak.end;
+
+    if (existingContainsNew) {
+      return { action: "block", message: `Already covered by ${b.start}-${b.end}.` };
+    }
+    if (!newContainsExisting) {
+      return { action: "block", message: `Partially overlaps with ${b.start}-${b.end}.` };
+    }
+  }
+
+  const breaksToRemove = overlapping.filter(
+    (b) => newBreak.start <= b.start && newBreak.end >= b.end
+  );
+  return { action: "replace", removeIds: breaksToRemove.map((b) => b.id) };
+};
+
 function Settings() {
   const [settings, setSettings] = useState(null);
   const [originalSettings, setOriginalSettings] = useState(null);
@@ -335,32 +359,6 @@ function Settings() {
       return newErrors;
     });
     setSettings({ ...settings, break_times: updated });
-  };
-
-  const applyBreakOverlapStrategy = (newBreak, existingBreaks) => {
-    const sameDayBreaks = existingBreaks.filter(
-      (b) => b.id !== newBreak.id && b.weekday === newBreak.weekday
-    );
-    const overlapping = sameDayBreaks.filter(
-      (b) => newBreak.start < b.end && b.start < newBreak.end
-    );
-
-    for (const b of overlapping) {
-      const newContainsExisting = newBreak.start <= b.start && newBreak.end >= b.end;
-      const existingContainsNew = b.start <= newBreak.start && b.end >= newBreak.end;
-
-      if (existingContainsNew) {
-        return { action: "block", message: `Already covered by ${b.start}-${b.end}.` };
-      }
-      if (!newContainsExisting) {
-        return { action: "block", message: `Partially overlaps with ${b.start}-${b.end}.` };
-      }
-    }
-
-    const breaksToRemove = overlapping.filter(
-      (b) => newBreak.start <= b.start && newBreak.end >= b.end
-    );
-    return { action: "replace", removeIds: breaksToRemove.map((b) => b.id) };
   };
 
   const updateBreak = (index, field, value) => {
@@ -1254,8 +1252,8 @@ function PaymentTab({
                 })}
                 onChange={(e) => {
                   const raw = e.target.value.replace(/[^0-9.]/g, "");
-                  const parsed = parseFloat(raw);
-                  if (!isNaN(parsed)) {
+                  const parsed = Number.parseFloat(raw);
+                  if (!Number.isNaN(parsed)) {
                     setSettings({
                       ...settings,
                       booking_fee_paise: Math.round(parsed * 100),
