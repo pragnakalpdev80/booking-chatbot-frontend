@@ -950,12 +950,21 @@ input:checked + .toggle-slider:before {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
-.quick-reply-btn:hover {
+.quick-reply-btn:hover:not(:disabled) {
   border-color: var(--brand-primary);
   color: var(--brand-primary);
   background: var(--brand-primary-light);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1);
+}
+.quick-reply-btn:disabled {
+  background: var(--bg-secondary);
+  border-color: var(--border-light);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
 }
 
 /* Session State Banner (Locked) */
